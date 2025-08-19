@@ -1,0 +1,34 @@
+{
+  "onboarding_data": [
+    {
+      "userId": "user_1755531681349_lmo8tmr26",
+      "email": "blah@blah.blah",
+      "name": "blahblah",
+      "domains": [
+        "system-design",
+        "mobile-dev"
+      ],
+      "experience_level": "beginner",
+      "preferred_study_time": "18:00",
+      "timezone": "Asia/Kolkata",
+      "onboardingCompleted": true,
+      "completedAt": "2025-08-18T15:41:33.620Z",
+      "createdAt": "2025-08-18T15:41:33.620Z"
+    },
+    {
+      "userId": "user_1755572428501_3cr1q4y1t",
+      "email": "adhu20906@gmail.com",
+      "name": "Zaki",
+      "domains": [
+        "cpp",
+        "devops"
+      ],
+      "experience_level": "beginner",
+      "preferred_study_time": "18:00",
+      "timezone": "Asia/Shanghai",
+      "onboardingCompleted": true,
+      "completedAt": "2025-08-19T03:00:36.749Z",
+      "createdAt": "2025-08-19T03:00:36.749Z"
+    }
+  ]
+}

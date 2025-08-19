@@ -1,0 +1,40 @@
+{
+  "diagnostic_tests": [
+    {
+      "userId": "user_1755531681349_lmo8tmr26",
+      "email": "blah@blah.blah",
+      "domainId": "system-design",
+      "domainName": "System Design",
+      "completed": false,
+      "startedAt": "2025-08-18T15:41:33.802Z"
+    },
+    {
+      "userId": "user_1755531681349_lmo8tmr26",
+      "email": "blah@blah.blah",
+      "domainId": "mobile-dev",
+      "domainName": "Mobile Development",
+      "completed": false,
+      "startedAt": "2025-08-18T15:41:33.821Z"
+    },
+    {
+      "userId": "user_1755572428501_3cr1q4y1t",
+      "email": "adhu20906@gmail.com",
+      "domainId": "cpp",
+      "domainName": "C++ & Data Structures",
+      "completed": true,
+      "startedAt": "2025-08-19T03:00:36.811Z",
+      "score": 85,
+      "completedAt": "2025-08-19T03:00:41.977Z"
+    },
+    {
+      "userId": "user_1755572428501_3cr1q4y1t",
+      "email": "adhu20906@gmail.com",
+      "domainId": "devops",
+      "domainName": "DevOps",
+      "completed": true,
+      "startedAt": "2025-08-19T03:00:36.817Z",
+      "score": 85,
+      "completedAt": "2025-08-19T03:00:47.240Z"
+    }
+  ]
+}

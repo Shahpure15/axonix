@@ -1,0 +1,23 @@
+{
+  "users": [
+    {
+      "id": "user_1755531681349_lmo8tmr26",
+      "email": "blah@blah.blah",
+      "password": "blahblah",
+      "name": "blahblah",
+      "onboardingCompleted": true,
+      "onboarding_status": "completed",
+      "createdAt": "2025-08-18T15:41:21.349Z"
+    },
+    {
+      "id": "user_1755572428501_3cr1q4y1t",
+      "email": "adhu20906@gmail.com",
+      "password": "blahblah",
+      "name": "Zaki",
+      "onboardingCompleted": true,
+      "onboarding_status": "completed",
+      "createdAt": "2025-08-19T03:00:28.501Z",
+      "lastLogin": "2025-08-19T06:56:46.870Z"
+    }
+  ]
+}

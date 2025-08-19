@@ -1,0 +1,249 @@
+sequenceDiagram
+    participant U as User
+    participant FE as Frontend
+    participant AG as API Gateway
+    participant AS as Auth Service
+    participant SS as Session Service
+    participant TS as Tutor Service
+    participant CS as Content Service
+    participant SW as Scoring Worker
+    participant SRS as SRS Scheduler
+    participant WO as Workflow Orchestrator
+    participant SC as Sandbox Connector
+    participant VDB as Vector DB
+    participant NS as Notification Service
+
+    %% User Registration Flow
+    Note over U, NS: User Registration & Authentication
+    U->>FE: Register with email/password
+    FE->>AG: POST /api/auth/signup
+    AG->>AS: Forward registration request
+    AS->>AS: Hash password, create user
+    AS->>AS: Generate JWT tokens
+    AS-->>AG: Return tokens & user data
+    AG-->>FE: Return auth response
+    FE-->>U: Show registration success
+
+    %% OAuth Login Flow
+    U->>FE: Click "Login with Google"
+    FE->>AG: POST /api/auth/oauth/google
+    AG->>AS: Forward OAuth request
+    AS->>AS: Validate OAuth token
+    AS->>AS: Create or update user
+    AS->>AS: Generate JWT tokens
+    AS-->>AG: Return tokens & user data
+    AG-->>FE: Return auth response
+    FE-->>U: Show login success
+
+    %% Onboarding Flow
+    Note over U, NS: User Onboarding
+    U->>FE: Complete onboarding form
+    FE->>AG: PUT /api/users/me/preferences
+    AG->>AS: Validate JWT token
+    AS-->>AG: Token valid
+    AG->>AS: Update user preferences
+    AS->>AS: Store preferences
+    AS-->>AG: Preferences updated
+    AG-->>FE: Success response
+    FE-->>U: Show onboarding complete
+
+    %% Diagnostic Session Flow
+    Note over U, NS: Diagnostic Session Workflow
+    U->>FE: Start diagnostic session
+    FE->>AG: POST /api/session/start {mode: "diagnostic"}
+    AG->>SS: Create diagnostic session
+    SS->>SS: Generate session_id
+    SS->>WO: Start diagnostic workflow
+    WO->>CS: Get diagnostic questions
+    CS->>VDB: Search questions by domain/difficulty
+    VDB-->>CS: Return matching questions
+    CS-->>WO: Return question set
+    WO->>TS: Initialize tutoring session
+    TS-->>WO: Session initialized
+    WO-->>SS: Workflow started
+    SS-->>AG: Session created
+    AG-->>FE: Return session_id
+
+    %% Question Delivery & Answer Submission
+    loop For each diagnostic question
+        FE->>AG: GET /api/session/events (WebSocket)
+        AG->>SS: Get next question event
+        SS->>TS: Get next question
+        TS->>CS: Fetch question details
+        CS-->>TS: Return question
+        TS-->>SS: Return question event
+        SS-->>AG: Stream question event
+        AG-->>FE: Send question to frontend
+        FE-->>U: Display question
+
+        U->>FE: Submit answer
+        FE->>AG: POST /api/session/answer
+        AG->>SS: Submit answer
+        SS->>TS: Process answer
+        TS->>SW: Score answer
+        SW->>SC: Execute code in sandbox
+        SC-->>SW: Return execution result
+        SW->>SW: Calculate auto score
+        SW-->>TS: Return scoring result
+        TS->>TS: Update session state
+        TS-->>SS: Answer processed
+        SS-->>AG: Answer submitted
+        AG-->>FE: Confirm submission
+    end
+
+    %% Diagnostic Summary & Roadmap Generation
+    FE->>AG: POST /api/session/end
+    AG->>SS: End diagnostic session
+    SS->>WO: Complete diagnostic workflow
+    WO->>TS: Generate diagnostic summary
+    TS->>CS: Analyze answer patterns
+    CS->>VDB: Search similar learning paths
+    VDB-->>CS: Return recommendations
+    CS-->>TS: Return analysis
+    TS->>TS: Calculate mastery vector
+    TS->>TS: Generate 7-day roadmap
+    TS-->>WO: Return diagnostic results
+    WO-->>SS: Workflow completed
+    SS-->>AG: Session ended
+    AG-->>FE: Return diagnostic summary
+    FE-->>U: Show results & roadmap
+
+    %% Learning Session Flow
+    Note over U, NS: Daily Learning Session
+    U->>FE: Start learning session
+    FE->>AG: POST /api/session/start {mode: "learning"}
+    AG->>SS: Create learning session
+    SS->>WO: Start learning workflow
+    
+    %% Recall Phase
+    WO->>SRS: Get due SRS items
+    SRS->>SRS: Query due items for user
+    SRS-->>WO: Return due items list
+    WO->>TS: Start recall phase
+    
+    loop For each due SRS item
+        TS->>CS: Get question for SRS item
+        CS-->>TS: Return question
+        TS-->>FE: Send recall question
+        FE-->>U: Display question
+        U->>FE: Submit answer
+        FE->>TS: Submit recall answer
+        TS->>SW: Score recall answer
+        SW-->>TS: Return score
+        TS->>SRS: Update SRS item
+        SRS->>SRS: Apply SM-2 algorithm
+        SRS-->>TS: SRS updated
+    end
+
+    %% Learn Phase
+    WO->>TS: Start learn phase
+    TS->>CS: Get micro-lessons for topics
+    CS->>VDB: Search relevant content
+    VDB-->>CS: Return learning materials
+    CS-->>TS: Return micro-lessons
+    TS-->>FE: Send learning content
+    FE-->>U: Display lessons
+
+    %% Practice Phase
+    WO->>TS: Start practice phase
+    TS->>CS: Get practice problems
+    CS-->>TS: Return coding problems
+    TS-->>FE: Send practice problem
+    FE-->>U: Display coding challenge
+
+    %% Hint Ladder Implementation
+    U->>FE: Request hint
+    FE->>AG: POST /api/session/hint
+    AG->>TS: Request hint
+    TS->>TS: Check hint ladder rules
+    TS->>TS: Enforce ladder progression
+    alt Hint allowed
+        TS->>CS: Get hint for level
+        CS-->>TS: Return hint text
+        TS->>TS: Log hint usage
+        TS-->>AG: Return hint
+        AG-->>FE: Send hint
+        FE-->>U: Display hint
+    else Hint not allowed
+        TS-->>AG: Return error "Complete lower levels first"
+        AG-->>FE: Send error
+        FE-->>U: Show hint ladder message
+    end
+
+    %% Code Submission & Scoring
+    U->>FE: Submit code solution
+    FE->>AG: POST /api/session/code
+    AG->>SS: Submit code
+    SS->>SW: Score code submission
+    SW->>SC: Execute in sandbox
+    SC->>SC: Run test cases
+    SC->>SC: Check resource limits
+    SC-->>SW: Return execution results
+    SW->>SW: Calculate composite score
+    SW->>SW: Generate feedback
+    SW-->>SS: Return scoring results
+    SS->>SRS: Create/update SRS item
+    SRS->>SRS: Calculate quality score
+    SRS->>SRS: Apply hint penalty
+    SRS->>SRS: Schedule next review
+    SRS-->>SS: SRS item updated
+    SS-->>AG: Code scored
+    AG-->>FE: Return results
+    FE-->>U: Show score & feedback
+
+    %% Reflect Phase
+    WO->>TS: Start reflect phase
+    TS-->>FE: Request reflection input
+    FE-->>U: Show reflection form
+    U->>FE: Submit complex moments/feedback
+    FE->>AG: POST /api/session/reflect
+    AG->>TS: Process reflection
+    TS->>TS: Analyze complex moments
+    TS->>VDB: Store reflection embeddings
+    VDB-->>TS: Embeddings stored
+    TS-->>AG: Reflection processed
+    AG-->>FE: Reflection saved
+    FE-->>U: Show session complete
+
+    %% SRS Background Processing
+    Note over U, NS: Automated SRS Scheduling
+    activate SRS
+    SRS->>SRS: Daily cron job runs
+    SRS->>SRS: Calculate due items
+    SRS->>NS: Schedule reminder notifications
+    NS->>NS: Queue email reminders
+    NS-->>SRS: Reminders scheduled
+    deactivate SRS
+
+    %% Admin Dashboard Data Flow
+    Note over U, NS: Admin Dashboard
+    FE->>AG: GET /api/admin/sessions
+    AG->>AS: Validate admin token
+    AS-->>AG: Admin authorized
+    AG->>SS: Get session analytics
+    SS->>SS: Query session data
+    SS-->>AG: Return analytics
+    AG-->>FE: Send dashboard data
+    FE-->>U: Display admin dashboard
+
+    %% Error Handling & Circuit Breaker
+    Note over U, NS: Error Handling Example
+    FE->>AG: API request
+    AG->>SS: Forward request
+    SS->>SC: External service call
+    SC-->>SS: Service timeout/error
+    SS->>SS: Circuit breaker activates
+    SS->>SS: Return cached/fallback response
+    SS-->>AG: Fallback response
+    AG-->>FE: Degraded service response
+    FE-->>U: Show partial functionality
+
+    %% Workflow Orchestration Events
+    Note over SRS: Microservice Events
+    WO->>WO: Workflow step completes
+    WO->>WO: Log step execution
+    WO->>WO: Check next step conditions
+    WO->>WO: Trigger next workflow step
+    WO->>WO: Handle workflow errors
+    WO->>WO: Retry failed steps
+    WO->>WO: Update workflow state

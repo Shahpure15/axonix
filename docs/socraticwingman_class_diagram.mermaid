@@ -1,0 +1,278 @@
+classDiagram
+    %% Core Domain Models
+    class User {
+        +string user_id
+        +string email
+        +string password_hash
+        +UserPreferences preferences
+        +DateTime created_at
+        +DateTime updated_at
+        +validateEmail() boolean
+        +updatePreferences(prefs: UserPreferences) void
+        +getMasteryVector() MasteryVector
+    }
+
+    class UserPreferences {
+        +string[] domains
+        +string experience_level
+        +string preferred_study_time
+        +string timezone
+        +boolean email_notifications
+        +boolean opt_in_data_storage
+    }
+
+    class Session {
+        +string session_id
+        +string user_id
+        +SessionType type
+        +SessionStatus status
+        +DateTime started_at
+        +DateTime ended_at
+        +string summary_id
+        +SessionMetrics metrics
+        +startSession() void
+        +endSession() void
+        +getCurrentQuestion() Question
+        +submitAnswer(answer: Answer) void
+    }
+
+    class Question {
+        +string qid
+        +string domain
+        +DifficultyLevel difficulty
+        +string[] tags
+        +string body
+        +QuestionType kind
+        +TestCase[] testcases
+        +string canonical_solution
+        +HintLevel[] hints
+        +validateAnswer(answer: string) ValidationResult
+        +getHint(level: HintLevel) string
+    }
+
+    class Answer {
+        +string answer_id
+        +string session_id
+        +string qid
+        +string answer_payload
+        +number score
+        +string verdict
+        +number time_taken
+        +HintLevel max_hint_used
+        +calculateScore() number
+    }
+
+    class MasteryVector {
+        +string user_id
+        +string topic
+        +number score
+        +DateTime last_updated
+        +updateScore(newScore: number) void
+        +getConfidenceLevel() string
+    }
+
+    class SRSItem {
+        +string srs_id
+        +string user_id
+        +string qid
+        +number repetitions
+        +number ease_factor
+        +number interval_days
+        +DateTime next_review_date
+        +SRSHistory[] history
+        +updateSRS(quality: number) void
+        +isDue() boolean
+        +calculateNextReview() DateTime
+    }
+
+    class HintUsage {
+        +string user_id
+        +string session_id
+        +string qid
+        +HintLevel hint_level
+        +DateTime timestamp
+        +recordUsage() void
+    }
+
+    class ComplexMoment {
+        +string id
+        +string user_id
+        +string session_id
+        +string text
+        +string[] tags
+        +boolean resolved
+        +DateTime created_at
+        +markResolved() void
+        +addTags(tags: string[]) void
+    }
+
+    %% Service Classes
+    class AuthService {
+        +register(email: string, password: string) Promise~AuthResult~
+        +login(email: string, password: string) Promise~AuthResult~
+        +oauthLogin(provider: string, token: string) Promise~AuthResult~
+        +refreshToken(refreshToken: string) Promise~string~
+        +logout(userId: string) Promise~void~
+        +validateToken(token: string) Promise~User~
+    }
+
+    class SessionService {
+        +createSession(userId: string, domain: string, mode: SessionType) Promise~Session~
+        +getSession(sessionId: string) Promise~Session~
+        +updateSession(sessionId: string, data: object) Promise~void~
+        +endSession(sessionId: string) Promise~SessionSummary~
+        +getSessionEvents(sessionId: string) Promise~SessionEvent[]~
+    }
+
+    class TutorService {
+        +getNextQuestion(sessionId: string) Promise~Question~
+        +validateAnswer(sessionId: string, answer: Answer) Promise~ValidationResult~
+        +requestHint(sessionId: string, qid: string, level: HintLevel) Promise~string~
+        +detectComplexMoment(sessionId: string, context: object) Promise~ComplexMoment~
+        +enforceHintLadder(userId: string, qid: string, requestedLevel: HintLevel) boolean
+    }
+
+    class ContentService {
+        +getQuestionsByDomain(domain: string) Promise~Question[]~
+        +getQuestionsByDifficulty(difficulty: DifficultyLevel) Promise~Question[]~
+        +searchQuestions(query: string, filters: object) Promise~Question[]~
+        +createQuestion(question: Question) Promise~string~
+        +updateQuestion(qid: string, updates: object) Promise~void~
+        +getMicroLesson(topic: string) Promise~MicroLesson~
+    }
+
+    class ScoringWorker {
+        +executeCode(code: string, testcases: TestCase[]) Promise~ExecutionResult~
+        +calculateAutoScore(result: ExecutionResult) number
+        +generateFeedback(result: ExecutionResult) string
+        +aggregateScores(autoScore: number, selfRating: number, timeScore: number, hintPenalty: number) number
+    }
+
+    class SRSScheduler {
+        +getDueItems(userId: string) Promise~SRSItem[]~
+        +updateSRSItem(srsId: string, quality: number) Promise~void~
+        +scheduleReview(userId: string, qid: string) Promise~void~
+        +calculateQuality(answer: Answer, selfRating: number) number
+        +runSM2Algorithm(item: SRSItem, quality: number) SRSItem
+    }
+
+    class AnalyticsService {
+        +updateMasteryVector(userId: string, topic: string, score: number) Promise~void~
+        +generateProgressReport(userId: string) Promise~ProgressReport~
+        +getSessionAnalytics(sessionId: string) Promise~SessionAnalytics~
+        +calculateLearningVelocity(userId: string) Promise~number~
+    }
+
+    class NotificationService {
+        +sendEmailNotification(userId: string, template: string, data: object) Promise~void~
+        +scheduleSRSReminder(userId: string, dueDate: DateTime) Promise~void~
+        +sendSessionSummary(userId: string, sessionId: string) Promise~void~
+    }
+
+    %% External Integrations
+    class SandboxConnector {
+        +executeCode(language: string, code: string, input: string) Promise~ExecutionResult~
+        +validateEnvironment() Promise~boolean~
+        +getResourceUsage() Promise~ResourceMetrics~
+    }
+
+    class VectorDBConnector {
+        +storeEmbedding(id: string, vector: number[], metadata: object) Promise~void~
+        +searchSimilar(vector: number[], limit: number) Promise~SearchResult[]~
+        +deleteEmbedding(id: string) Promise~void~
+        +updateMetadata(id: string, metadata: object) Promise~void~
+    }
+
+    class WorkflowOrchestrator {
+        +startWorkflow(workflowType: string, payload: object) Promise~string~
+        +getWorkflowStatus(workflowId: string) Promise~WorkflowStatus~
+        +sendWorkflowEvent(workflowId: string, event: object) Promise~void~
+        +handleWorkflowCallback(workflowId: string, result: object) Promise~void~
+    }
+
+    %% Enums and Value Objects
+    class SessionType {
+        <<enumeration>>
+        DIAGNOSTIC
+        LEARNING
+        PRACTICE
+        REVIEW
+    }
+
+    class SessionStatus {
+        <<enumeration>>
+        ACTIVE
+        PAUSED
+        COMPLETED
+        ABANDONED
+    }
+
+    class DifficultyLevel {
+        <<enumeration>>
+        BEGINNER
+        INTERMEDIATE
+        ADVANCED
+        EXPERT
+    }
+
+    class HintLevel {
+        <<enumeration>>
+        LEVEL_1_RESTATE
+        LEVEL_2_EDGE_CASES
+        LEVEL_3_DATA_STRUCTURE
+        LEVEL_4_PSEUDOCODE
+        LEVEL_5_UNIT_TESTS
+    }
+
+    class QuestionType {
+        <<enumeration>>
+        CODE
+        MULTIPLE_CHOICE
+        ESSAY
+        DIAGRAM
+    }
+
+    %% Relationships
+    User ||--|| UserPreferences : has
+    User ||--o{ Session : creates
+    User ||--o{ MasteryVector : has
+    User ||--o{ SRSItem : owns
+    User ||--o{ ComplexMoment : reports
+    
+    Session ||--o{ Answer : contains
+    Session ||--|| SessionType : has_type
+    Session ||--|| SessionStatus : has_status
+    
+    Question ||--o{ Answer : answered_by
+    Question ||--|| QuestionType : has_type
+    Question ||--|| DifficultyLevel : has_difficulty
+    Question ||--o{ HintUsage : generates
+    
+    Answer ||--|| Question : answers
+    Answer ||--|| Session : belongs_to
+    
+    SRSItem ||--|| Question : references
+    SRSItem ||--|| User : belongs_to
+    
+    HintUsage ||--|| Question : for_question
+    HintUsage ||--|| Session : in_session
+    HintUsage ||--|| HintLevel : at_level
+    
+    ComplexMoment ||--|| Session : occurred_in
+    ComplexMoment ||--|| User : reported_by
+    
+    %% Service Dependencies
+    AuthService ..> User : manages
+    SessionService ..> Session : manages
+    TutorService ..> Question : serves
+    TutorService ..> HintUsage : tracks
+    ContentService ..> Question : manages
+    ScoringWorker ..> Answer : scores
+    SRSScheduler ..> SRSItem : manages
+    AnalyticsService ..> MasteryVector : updates
+    
+    %% External Service Dependencies  
+    ScoringWorker ..> SandboxConnector : uses
+    ContentService ..> VectorDBConnector : uses
+    SessionService ..> WorkflowOrchestrator : uses
+    SRSScheduler ..> NotificationService : uses
