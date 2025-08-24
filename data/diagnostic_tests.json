@@ -35,6 +35,22 @@
       "startedAt": "2025-08-19T03:00:36.817Z",
       "score": 85,
       "completedAt": "2025-08-19T03:00:47.240Z"
+    },
+    {
+      "userId": "user_1755926963360_eimr76fz7",
+      "email": "ajithaadhwaithkumar@gmail.com",
+      "domainId": "cpp",
+      "domainName": "C++ & Data Structures",
+      "completed": false,
+      "startedAt": "2025-08-23T05:29:40.461Z"
+    },
+    {
+      "userId": "user_1755926963360_eimr76fz7",
+      "email": "ajithaadhwaithkumar@gmail.com",
+      "domainId": "system-design",
+      "domainName": "System Design",
+      "completed": false,
+      "startedAt": "2025-08-23T05:29:40.467Z"
     }
   ]
 }

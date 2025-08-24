@@ -29,6 +29,21 @@
       "onboardingCompleted": true,
       "completedAt": "2025-08-19T03:00:36.749Z",
       "createdAt": "2025-08-19T03:00:36.749Z"
+    },
+    {
+      "userId": "user_1755926963360_eimr76fz7",
+      "email": "ajithaadhwaithkumar@gmail.com",
+      "name": "Adhu",
+      "domains": [
+        "cpp",
+        "system-design"
+      ],
+      "experience_level": "beginner",
+      "preferred_study_time": "06:00",
+      "timezone": "Asia/Kolkata",
+      "onboardingCompleted": true,
+      "completedAt": "2025-08-23T05:29:40.397Z",
+      "createdAt": "2025-08-23T05:29:40.397Z"
     }
   ]
 }
