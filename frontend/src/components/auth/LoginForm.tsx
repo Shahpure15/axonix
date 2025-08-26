@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Icons } from '@/components/ui/icons';
 import { useAuthStore } from '@/lib/auth';
 import Link from 'next/link';
@@ -16,13 +15,14 @@ const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(1, 'Password is required'),
 });
-
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const router = useRouter();
-  const { login, isLoading } = useAuthStore();
-  const [loginError, setLoginError] = useState<string>('');
+  const { login } = useAuthStore();
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [networkError, setNetworkError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -34,75 +34,43 @@ export default function LoginForm() {
     clearErrors,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    mode: 'onBlur', // Validate on blur for better UX
+    mode: 'onBlur',
   });
 
-  // Additional safeguard: wrapper to prevent any form default behavior
+  // Prevent default form submission and use react-hook-form
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    console.log('🛡️ Form submission intercepted, calling react-hook-form handler');
     handleSubmit(onSubmit)(e);
   };
 
-  const onSubmit = async (data: LoginFormData, event?: React.FormEvent) => {
-    // Explicitly prevent any form submission default behavior
-    if (event) {
-      event.preventDefault();
-    }
-    
-    console.log('🚀 Form submitted, preventing default behavior');
+  const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
-    setLoginError('');
+    setEmailError('');
+    setPasswordError('');
+    setNetworkError('');
     clearErrors();
-
     try {
-      console.log('🔄 Attempting login for:', data.email);
-      
-      // Call auth store login method
       await login(data.email, data.password);
-      
-      console.log('✅ Login successful, redirecting to dashboard...');
-      
-      // On successful login, redirect to dashboard
+      // Only redirect after successful login
       router.push('/dashboard');
-      
     } catch (err: any) {
-      console.error('❌ Login failed:', err);
-      console.log('📧 Preserving email field:', data.email);
-      
-      // Clear only the password field for security
       setValue('password', '', { shouldValidate: false });
-      
-      // Set specific error message based on the error type
-      if (err.message?.toLowerCase().includes('invalid') || 
-          err.message?.toLowerCase().includes('credentials') ||
-          err.message?.toLowerCase().includes('password')) {
-        setLoginError('Incorrect email or password');
-      } else if (err.message?.toLowerCase().includes('user not found') ||
-                 err.message?.toLowerCase().includes('email')) {
-        setLoginError('No account found with this email address');
-      } else if (err.message?.toLowerCase().includes('network') ||
-                 err.message?.toLowerCase().includes('fetch')) {
-        setLoginError('Connection error. Please check your internet and try again');
+      const msg = err.message?.toLowerCase() || '';
+      if (msg.includes('user not found') || msg.includes('no user found') || msg.includes('email not found') || msg.includes('account not found')) {
+        setEmailError('This email address is not registered. Please check your email or sign up for a new account.');
+      } else if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password') || msg.includes('incorrect')) {
+        setPasswordError('The password you entered is incorrect. Please try again.');
+      } else if (msg.includes('network') || msg.includes('fetch')) {
+        setNetworkError('Connection error. Please check your internet and try again.');
       } else {
-        // Generic fallback error message
-        setLoginError('Incorrect email or password');
+        setNetworkError('Login failed. Please check your credentials and try again.');
       }
-      
-      console.log('🔴 Error set:', loginError || 'Incorrect email or password');
-      
-      // Focus back on password field for retry
       setTimeout(() => {
         const passwordInput = document.getElementById('password');
-        if (passwordInput) {
-          passwordInput.focus();
-        }
+        if (passwordInput) passwordInput.focus();
       }, 100);
-      
     } finally {
       setIsSubmitting(false);
-      console.log('✅ Form submission completed');
     }
   };
 
@@ -116,20 +84,17 @@ export default function LoginForm() {
     window.location.href = '/api/auth/linkedin';
   };
 
-  // Clear login error when user starts typing
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (loginError) {
-      setLoginError('');
-    }
+  // Clear field errors when user types
+  const handleEmailChange = () => {
+    if (emailError) setEmailError('');
+    if (networkError) setNetworkError('');
+  };
+  const handlePasswordChange = () => {
+    if (passwordError) setPasswordError('');
+    if (networkError) setNetworkError('');
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (loginError) {
-      setLoginError('');
-    }
-  };
-
-  const isFormDisabled = isLoading || isSubmitting;
+  const isFormDisabled = isSubmitting;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
@@ -150,11 +115,9 @@ export default function LoginForm() {
                 type="email"
                 placeholder="your@email.com"
                 disabled={isFormDisabled}
-                aria-invalid={!!(errors.email || loginError)}
-                aria-describedby={errors.email ? 'email-error' : loginError ? 'login-error' : undefined}
-                className={`transition-colors ${
-                  errors.email || loginError ? 'border-red-500 focus:border-red-500' : ''
-                }`}
+                aria-invalid={!!(errors.email || emailError)}
+                aria-describedby={errors.email ? 'email-error' : emailError ? 'email-field-error' : undefined}
+                className={`transition-colors ${errors.email || emailError ? 'border-red-500 focus:border-red-500' : ''}`}
                 {...register('email', {
                   onChange: handleEmailChange
                 })}
@@ -162,6 +125,11 @@ export default function LoginForm() {
               {errors.email && (
                 <p id="email-error" className="text-sm text-red-600 font-medium" role="alert">
                   {errors.email.message}
+                </p>
+              )}
+              {emailError && (
+                <p id="email-field-error" className="text-sm text-red-600 font-medium" role="alert">
+                  {emailError}
                 </p>
               )}
             </div>
@@ -174,11 +142,9 @@ export default function LoginForm() {
                 type="password"
                 placeholder="••••••••"
                 disabled={isFormDisabled}
-                aria-invalid={!!(errors.password || loginError)}
-                aria-describedby={errors.password ? 'password-error' : loginError ? 'login-error' : undefined}
-                className={`transition-colors ${
-                  errors.password || loginError ? 'border-red-500 focus:border-red-500' : ''
-                }`}
+                aria-invalid={!!(errors.password || passwordError)}
+                aria-describedby={errors.password ? 'password-error' : passwordError ? 'password-field-error' : undefined}
+                className={`transition-colors ${errors.password || passwordError ? 'border-red-500 focus:border-red-500' : ''}`}
                 {...register('password', {
                   onChange: handlePasswordChange
                 })}
@@ -188,10 +154,15 @@ export default function LoginForm() {
                   {errors.password.message}
                 </p>
               )}
+              {passwordError && (
+                <p id="password-field-error" className="text-sm text-red-600 font-medium" role="alert">
+                  {passwordError}
+                </p>
+              )}
             </div>
 
-            {/* Login Error Message */}
-            {loginError && (
+            {/* Network/General Error Message */}
+            {networkError && (
               <div 
                 id="login-error" 
                 className="p-3 bg-red-50 border border-red-200 rounded-md"
@@ -211,7 +182,7 @@ export default function LoginForm() {
                       clipRule="evenodd" 
                     />
                   </svg>
-                  {loginError}
+                  {networkError}
                 </p>
               </div>
             )}
