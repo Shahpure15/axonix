@@ -18,6 +18,16 @@
       "onboarding_status": "completed",
       "createdAt": "2025-08-19T03:00:28.501Z",
       "lastLogin": "2025-08-19T06:56:46.870Z"
+    },
+    {
+      "id": "user_1755926963360_eimr76fz7",
+      "email": "ajithaadhwaithkumar@gmail.com",
+      "password": "blahblah",
+      "name": "Adhu",
+      "onboardingCompleted": true,
+      "onboarding_status": "completed",
+      "createdAt": "2025-08-23T05:29:23.360Z",
+      "lastLogin": "2025-08-23T06:32:21.727Z"
     }
   ]
 }

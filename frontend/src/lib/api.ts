@@ -3,7 +3,7 @@ import { ApiResponse, AuthToken } from '@/types';
 import { safeLocalStorage } from './storage';
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -74,7 +74,7 @@ export const authApi = {
   },
 
   signup: async (email: string, password: string, name?: string): Promise<{ user: any; tokens: AuthToken }> => {
-    const response = await apiClient.post('/auth/signup', { email, password, name });
+    const response = await apiClient.post('/auth/register', { email, password, name });
     return handleApiResponse(response);
   },
 

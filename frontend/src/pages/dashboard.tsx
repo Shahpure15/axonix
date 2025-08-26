@@ -60,22 +60,22 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [pendingTests, setPendingTests] = useState<string[]>([]);
   const [completedTests, setCompletedTests] = useState<string[]>([]);
   const [userDomains, setUserDomains] = useState<string[]>([]);
   const [allTestsCompleted, setAllTestsCompleted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
-  // Redirect if not authenticated
+  // All useEffect hooks go here first, before any early returns
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/');
+    if (!isLoading && !isAuthenticated) {
+      router.push('/auth/login');
       return;
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -83,33 +83,59 @@ export default function Dashboard() {
     }
   }, [isAuthenticated]);
 
+  // Show loading while auth is being checked
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render dashboard content if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
+
   const loadDashboardData = async () => {
     try {
       console.log('Loading dashboard data...');
       
-      // Get current user ID
-      const currentUserId = localStorage.getItem('currentUserId');
-      if (!currentUserId) {
-        console.log('No user ID found, redirecting to login');
+      // Get current user from auth store
+      if (!user || !user.user_id) {
+        console.log('No user found in auth store, redirecting to login');
         router.push('/auth/login');
         return;
       }
+
+      const currentUserId = user.user_id;
 
       // Load user data from our API
       try {
         const userData = await userStorage.getCurrentUser();
         if (!userData) {
-          console.log('User data not found, redirecting to login');
-          localStorage.removeItem('currentUserId');
-          router.push('/auth/login');
-          return;
+          console.log('User data not found, using auth store data');
+          // Create basic user data from auth store if file doesn't exist yet
+          setCurrentUser({
+            id: user.user_id,
+            email: user.email,
+            password: '', // We don't store passwords in frontend
+            name: user.name,
+            onboardingCompleted: false,
+            onboarding_status: 'not_started',
+            createdAt: (user.created_at || new Date()).toISOString(),
+            lastLogin: new Date().toISOString()
+          });
+        } else {
+          console.log('Current user data from API:', userData);
+          setCurrentUser(userData);
         }
-        console.log('Current user data from API:', userData);
-        setCurrentUser(userData);
       } catch (userError) {
         console.error('Error loading user data:', userError);
         console.log('User not found, redirecting to login');
-        localStorage.removeItem('currentUserId');
         router.push('/auth/login');
         return;
       }
@@ -185,7 +211,7 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
-      setIsLoading(false);
+      setIsLoadingData(false);
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,8 +6,19 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { userStorage, DOMAINS } from '@/lib/userData';
 import { useAuthStore } from '@/lib/auth';
+
+// Domain definitions - moved here to avoid dependency on userStorage
+const DOMAINS = [
+  { id: 'javascript', name: 'JavaScript', description: 'Modern ES6+, async/await, frameworks' },
+  { id: 'python', name: 'Python', description: 'Data structures, algorithms, web frameworks' },
+  { id: 'react', name: 'React', description: 'Components, hooks, state management' },
+  { id: 'nodejs', name: 'Node.js', description: 'Backend development, APIs, databases' },
+  { id: 'algorithms', name: 'Algorithms', description: 'Problem solving, data structures' },
+  { id: 'databases', name: 'Databases', description: 'SQL, NoSQL, database design' },
+  { id: 'webdev', name: 'Web Development', description: 'HTML, CSS, responsive design' },
+  { id: 'devops', name: 'DevOps', description: 'CI/CD, containerization, cloud platforms' },
+];
 
 const onboardingSchema = z.object({
   domains: z.array(z.string()).min(1, 'Please select at least one domain'),
@@ -35,7 +46,7 @@ const STUDY_TIMES = [
 
 export default function OnboardingWizard() {
   const router = useRouter();
-  const { refreshAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading, tokens, refreshAuth } = useAuthStore();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -45,6 +56,53 @@ export default function OnboardingWizard() {
   const [selectedTimezone, setSelectedTimezone] = useState<string>(
     Intl.DateTimeFormat().resolvedOptions().timeZone
   );
+
+  // Debug auth state
+  useEffect(() => {
+    console.log('🔍 Onboarding - Auth State:', { 
+      isLoading, 
+      isAuthenticated, 
+      hasUser: !!user, 
+      userId: user?.user_id,
+      userEmail: user?.email,
+      hasToken: !!tokens?.access_token
+    });
+  }, [isLoading, isAuthenticated, user, tokens]);
+
+  // Handle auth state and redirects
+  useEffect(() => {
+    // If still loading, don't do anything
+    if (isLoading) return;
+
+    // If not authenticated, check if we have a token and try to refresh
+    if (!isAuthenticated) {
+      const storedToken = localStorage.getItem('access_token');
+      if (storedToken) {
+        console.log('🔄 Token found but not authenticated, refreshing auth...');
+        refreshAuth();
+      } else {
+        console.log('❌ No token found, redirecting to signup');
+        router.push('/auth/signup');
+      }
+    }
+  }, [isLoading, isAuthenticated, refreshAuth, router]);
+
+  // Show loading while auth state is loading
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
   const {
     register,
@@ -84,66 +142,59 @@ export default function OnboardingWizard() {
 
     setIsSubmitting(true);
     try {
-      // Get current user ID from localStorage (should be set after signup)
-      const currentUserId = localStorage.getItem('currentUserId');
-      if (!currentUserId) {
+      // Ensure we have user data and token
+      if (!user?.user_id || !tokens?.access_token) {
         throw new Error('No user session found. Please sign up first.');
       }
 
-      console.log('Saving onboarding data...');
-      
-      // Get user data for email and name
-      const userResponse = await fetch(`/api/users?userId=${currentUserId}`);
-      const userData = await userResponse.json();
-      
-      if (!userResponse.ok) {
-        throw new Error('Failed to get user data');
+      console.log('💾 Saving onboarding data to backend...', { 
+        userId: user.user_id,
+        userEmail: user.email,
+        domains: selectedDomains.length,
+        experience_level: selectedExperienceLevel,
+        preferred_study_time: selectedStudyTime,
+        timezone: selectedTimezone
+      });
+
+      // Send onboarding data to backend
+      const response = await fetch('http://localhost:5000/api/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokens.access_token}`,
+        },
+        body: JSON.stringify({
+          userId: user.user_id,
+          domains: selectedDomains,
+          experience_level: selectedExperienceLevel,
+          preferred_study_time: selectedStudyTime,
+          timezone: selectedTimezone,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to save onboarding data');
       }
 
-      // Save onboarding data EXACTLY like signup saves user data
-      await userStorage.saveOnboardingData(
-        currentUserId,
-        userData.user.email,
-        userData.user.name,
-        selectedDomains,
-        selectedExperienceLevel,
-        selectedStudyTime,
-        selectedTimezone
-      );
-
-      console.log('Onboarding data saved to onboarding.json');
-      
-      // Initialize diagnostic tests for each selected domain - SAME TO SAME
-      for (const domainId of selectedDomains) {
-        const domainInfo = DOMAINS.find(d => d.id === domainId);
-        await userStorage.saveDiagnosticTest(
-          currentUserId,
-          userData.user.email,
-          domainId,
-          domainInfo?.name || domainId,
-          false // not completed yet
-        );
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to save onboarding data');
       }
 
-      console.log('Diagnostic tests saved to diagnostic_tests.json');
+      console.log('✅ Onboarding data saved successfully:', result);
 
-      // ALSO update onboarding status in users.json - IMPORTANT!
-      await userStorage.updateUserOnboardingStatus(currentUserId);
-      console.log('Onboarding status updated in users.json');
-
-      console.log('All data saved successfully');
-      
       // Show success animation
       setIsSuccess(true);
       
       // Redirect to dashboard after showing success
       setTimeout(() => {
-        console.log('Redirecting to dashboard');
+        console.log('🎯 Redirecting to dashboard...');
         router.push('/dashboard');
       }, 2000);
       
     } catch (error) {
-      console.error('Failed to save onboarding data:', error);
+      console.error('❌ Failed to save onboarding data:', error);
       alert(`Failed to save onboarding data: ${(error as Error).message}`);
     } finally {
       setIsSubmitting(false);
