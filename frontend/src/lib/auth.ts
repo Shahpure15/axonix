@@ -16,7 +16,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name?: string) => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
   clearAuth: () => void;
@@ -31,7 +31,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: true, // Start with true to prevent flash
 
       login: async (email: string, password: string) => {
-        set({ isLoading: true });
+        // Don't set global loading during login attempts - let the form handle its own loading state
         try {
           const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
@@ -81,7 +81,7 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
           });
         } catch (error) {
-          set({ isLoading: false });
+          // Don't set global loading false on login error - form handles this
           if (error instanceof Error) {
             throw error;
           } else {
@@ -90,15 +90,15 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      signup: async (email: string, password: string, name?: string) => {
-        set({ isLoading: true });
+      signup: async (email: string, password: string, name: string) => {
+        // Don't set global loading during signup attempts - let the form handle its own loading state
         try {
           const response = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, password, name }),
           });
 
           const data = await response.json();
@@ -147,7 +147,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true
           });
         } catch (error) {
-          set({ isLoading: false });
+          // Don't set global loading false on signup error - form handles this
           if (error instanceof Error) {
             throw error;
           } else {

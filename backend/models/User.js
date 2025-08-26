@@ -7,6 +7,13 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Name is required'],
+    trim: true,
+    minlength: [2, 'Name must be at least 2 characters long'],
+    maxlength: [100, 'Name cannot exceed 100 characters']
+  },
   email: {
     type: String,
     required: [true, 'Email is required'],
@@ -155,11 +162,13 @@ userSchema.statics.findByEmail = function(email) {
 userSchema.virtual('profile').get(function() {
   return {
     id: this._id,
+    name: this.name,
     email: this.email,
     xp: this.xp,
     level: this.level,
     clan: this.clan,
     quests: this.quests,
+    onboardingCompleted: this.onboardingCompleted,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt
   };

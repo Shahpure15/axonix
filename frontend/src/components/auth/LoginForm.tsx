@@ -20,9 +20,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginForm() {
   const router = useRouter();
   const { login } = useAuthStore();
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [networkError, setNetworkError] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -45,29 +43,24 @@ export default function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
-    setEmailError('');
-    setPasswordError('');
-    setNetworkError('');
+    setLoginError('');
     clearErrors();
+    
     try {
       await login(data.email, data.password);
-      // Only redirect after successful login
+      // Only redirect after successful login - no loading screen
       router.push('/dashboard');
     } catch (err: any) {
+      // Clear password field for security
       setValue('password', '', { shouldValidate: false });
-      const msg = err.message?.toLowerCase() || '';
-      if (msg.includes('user not found') || msg.includes('no user found') || msg.includes('email not found') || msg.includes('account not found')) {
-        setEmailError('This email address is not registered. Please check your email or sign up for a new account.');
-      } else if (msg.includes('invalid') || msg.includes('credentials') || msg.includes('password') || msg.includes('incorrect')) {
-        setPasswordError('The password you entered is incorrect. Please try again.');
-      } else if (msg.includes('network') || msg.includes('fetch')) {
-        setNetworkError('Connection error. Please check your internet and try again.');
-      } else {
-        setNetworkError('Login failed. Please check your credentials and try again.');
-      }
+      
+      // Show error with both fields highlighted
+      setLoginError('Please check your email and password. If you don\'t have an account, please create one.');
+      
+      // Auto-focus email field for user convenience
       setTimeout(() => {
-        const passwordInput = document.getElementById('password');
-        if (passwordInput) passwordInput.focus();
+        const emailInput = document.getElementById('email');
+        if (emailInput) emailInput.focus();
       }, 100);
     } finally {
       setIsSubmitting(false);
@@ -86,12 +79,10 @@ export default function LoginForm() {
 
   // Clear field errors when user types
   const handleEmailChange = () => {
-    if (emailError) setEmailError('');
-    if (networkError) setNetworkError('');
+    if (loginError) setLoginError('');
   };
   const handlePasswordChange = () => {
-    if (passwordError) setPasswordError('');
-    if (networkError) setNetworkError('');
+    if (loginError) setLoginError('');
   };
 
   const isFormDisabled = isSubmitting;
@@ -115,9 +106,9 @@ export default function LoginForm() {
                 type="email"
                 placeholder="your@email.com"
                 disabled={isFormDisabled}
-                aria-invalid={!!(errors.email || emailError)}
-                aria-describedby={errors.email ? 'email-error' : emailError ? 'email-field-error' : undefined}
-                className={`transition-colors ${errors.email || emailError ? 'border-red-500 focus:border-red-500' : ''}`}
+                aria-invalid={!!(errors.email || loginError)}
+                aria-describedby={errors.email ? 'email-error' : loginError ? 'login-error' : undefined}
+                className={`transition-colors ${errors.email || loginError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                 {...register('email', {
                   onChange: handleEmailChange
                 })}
@@ -125,11 +116,6 @@ export default function LoginForm() {
               {errors.email && (
                 <p id="email-error" className="text-sm text-red-600 font-medium" role="alert">
                   {errors.email.message}
-                </p>
-              )}
-              {emailError && (
-                <p id="email-field-error" className="text-sm text-red-600 font-medium" role="alert">
-                  {emailError}
                 </p>
               )}
             </div>
@@ -142,9 +128,9 @@ export default function LoginForm() {
                 type="password"
                 placeholder="••••••••"
                 disabled={isFormDisabled}
-                aria-invalid={!!(errors.password || passwordError)}
-                aria-describedby={errors.password ? 'password-error' : passwordError ? 'password-field-error' : undefined}
-                className={`transition-colors ${errors.password || passwordError ? 'border-red-500 focus:border-red-500' : ''}`}
+                aria-invalid={!!(errors.password || loginError)}
+                aria-describedby={errors.password ? 'password-error' : loginError ? 'login-error' : undefined}
+                className={`transition-colors ${errors.password || loginError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                 {...register('password', {
                   onChange: handlePasswordChange
                 })}
@@ -154,22 +140,17 @@ export default function LoginForm() {
                   {errors.password.message}
                 </p>
               )}
-              {passwordError && (
-                <p id="password-field-error" className="text-sm text-red-600 font-medium" role="alert">
-                  {passwordError}
-                </p>
-              )}
             </div>
 
-            {/* Network/General Error Message */}
-            {networkError && (
+            {/* Login Error Message */}
+            {loginError && (
               <div 
                 id="login-error" 
-                className="p-3 bg-red-50 border border-red-200 rounded-md"
+                className="p-4 bg-red-50 border border-red-200 rounded-md"
                 role="alert"
                 aria-live="polite"
               >
-                <p className="text-sm text-red-600 font-medium flex items-center">
+                <p className="text-sm text-red-700 font-medium flex items-center">
                   <svg 
                     className="mr-2 h-4 w-4 text-red-500" 
                     fill="currentColor" 
@@ -182,7 +163,12 @@ export default function LoginForm() {
                       clipRule="evenodd" 
                     />
                   </svg>
-                  {networkError}
+                  {loginError}
+                </p>
+                <p className="text-xs text-red-600 mt-1 ml-6">
+                  <Link href="/auth/signup" className="underline hover:text-red-800">
+                    Create a new account
+                  </Link>
                 </p>
               </div>
             )}

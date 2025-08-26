@@ -20,13 +20,20 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
  */
 router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, name } = req.body;
 
     // Validate input
-    if (!email || !password) {
+    if (!email || !password || !name) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required'
+        message: 'Name, email and password are required'
+      });
+    }
+
+    if (name.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name must be at least 2 characters long'
       });
     }
 
@@ -48,6 +55,7 @@ router.post('/register', async (req, res) => {
 
     // Create new user (password will be hashed by pre-save hook)
     const newUser = new User({
+      name,
       email,
       passwordHash: password // This will be hashed by the pre-save hook
     });
