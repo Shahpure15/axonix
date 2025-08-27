@@ -16,9 +16,9 @@ import {
   Pause,
   RotateCcw
 } from 'lucide-react';
-import { createLearningWorkflow, WorkflowRequest, WorkflowResponse, WorkflowTask } from '@/lib/worqhat';
+import { createLearningWorkflow, WorkflowRequest, WorkflowResponse, WorkflowTask } from '@/lib/qraptor';
 
-interface WorqhatWorkflowProps {
+interface QraptorWorkflowProps {
   userId: string;
   learningMode: 'diagnostic' | 'learning' | 'practice' | 'review';
   domain: string;
@@ -27,14 +27,14 @@ interface WorqhatWorkflowProps {
   onCancel: () => void;
 }
 
-export default function WorqhatWorkflow({ 
+export default function QraptorWorkflow({ 
   userId, 
   learningMode, 
   domain, 
   userLevel, 
   onComplete, 
   onCancel 
-}: WorqhatWorkflowProps) {
+}: QraptorWorkflowProps) {
   const [workflow, setWorkflow] = useState<WorkflowResponse | null>(null);
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -65,9 +65,9 @@ export default function WorqhatWorkflow({
         }
       };
 
-      console.log('🚀 Creating WorqHat workflow with request:', workflowRequest);
+      console.log('🚀 Creating Qraptor workflow with request:', workflowRequest);
       const workflowResponse = await createLearningWorkflow(workflowRequest);
-      console.log('✅ WorqHat workflow created:', workflowResponse);
+      console.log('✅ Qraptor workflow created:', workflowResponse);
       
       setWorkflow(workflowResponse);
       setTaskStartTime(Date.now());
@@ -193,7 +193,7 @@ export default function WorqhatWorkflow({
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-axonix-700 mx-auto mb-4"></div>
             <h3 className="text-xl font-semibold text-axonix-800 mb-2">Creating Your Personalized Workflow</h3>
-            <p className="text-axonix-600">WorqHat AI is analyzing your preferences and generating custom learning tasks...</p>
+            <p className="text-axonix-600">Qraptor AI is analyzing your preferences and generating custom learning tasks...</p>
           </CardContent>
         </Card>
       </div>

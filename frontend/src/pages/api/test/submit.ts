@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import * as fs from 'fs';
 import * as path from 'path';
-import { sendModuleSubmission } from '@/lib/worqhat';
+import { sendModuleSubmission } from '@/lib/qraptor';
 
 interface TestSubmission {
   moduleId: string;
@@ -108,8 +108,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Generate session ID
       const sessionId = `${submission.moduleId}-${submission.subModuleId}-${Date.now()}`;
 
-      // Prepare data for Worqhat analysis
-      const worqhatPayload = {
+      // Prepare data for Qraptor analysis
+      const qraptorPayload = {
         userId: submission.userId,
         moduleId: `${submission.moduleId}_${submission.subModuleId}`,
         score,
@@ -119,13 +119,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         difficulty: 'beginner'
       };
 
-      // Send to Worqhat for analysis and get recommended subtasks
+      // Send to Qraptor for analysis and get recommended subtasks
       let subtasks = [];
       try {
-        subtasks = await sendModuleSubmission(worqhatPayload);
+        subtasks = await sendModuleSubmission(qraptorPayload);
       } catch (error) {
-        console.error('Worqhat API error:', error);
-        // Fallback to default subtasks if Worqhat fails
+        console.error('Qraptor API error:', error);
+        // Fallback to default subtasks if Qraptor fails
         if (score < 70) {
           subtasks = [
             {

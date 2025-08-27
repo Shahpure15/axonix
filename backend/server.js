@@ -9,6 +9,11 @@ const dotenv = require('dotenv');
 const connectDB = require('./db');
 const authRoutes = require('./routes/auth');
 const onboardingRoutes = require('./routes/onboarding');
+const testRoutes = require('./routes/test');
+const progressRoutes = require('./routes/progress');
+const analyticsRoutes = require('./routes/analytics');
+const dashboardRoutes = require('./routes/dashboard');
+const aiTestRoutes = require('./routes/ai-test');
 
 // Load environment variables
 dotenv.config();
@@ -56,6 +61,11 @@ app.get('/', (req, res) => {
 // API Routes
 app.use('/auth', authRoutes);
 app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/progress', progressRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/ai-test', aiTestRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

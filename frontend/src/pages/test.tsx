@@ -77,7 +77,14 @@ const TestPage = () => {
   const analysisTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (module && submodule) {
+    // Check if this is an AI-generated test
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAITest = urlParams.get('ai') === 'true';
+    const testId = urlParams.get('testId');
+    
+    if (isAITest && testId) {
+      initializeAITest(testId);
+    } else if (module && submodule) {
       initializeTest();
     }
   }, [module, submodule]);
@@ -90,6 +97,65 @@ const TestPage = () => {
       handleSubmitTest();
     }
   }, [timeRemaining, aiFeedback]);
+
+  /**
+   * Initialize AI-generated test from session storage
+   */
+  const initializeAITest = async (testId: string) => {
+    try {
+      setLoading(true);
+      console.log('🤖 Loading AI-generated test:', testId);
+      
+      // Get AI test data from session storage
+      const aiTestData = sessionStorage.getItem('aiGeneratedTest');
+      if (!aiTestData) {
+        throw new Error('AI test data not found');
+      }
+
+      const parsedTestData = JSON.parse(aiTestData);
+      console.log('📊 AI Test Data:', parsedTestData);
+
+      // Initialize test session for AI test
+      const session: TestSession = {
+        moduleId: parsedTestData.domain,
+        subModuleId: parsedTestData.testType,
+        userId: 'user_123', // This should come from auth
+        startTime: new Date().toISOString(),
+        answers: {},
+        timeSpent: 0,
+        currentQuestion: 0,
+        realTimeResponses: []
+      };
+      setTestSession(session);
+
+      // Convert AI questions to test format
+      const formattedQuestions: TestQuestion[] = parsedTestData.questions.map((q: any) => ({
+        id: q._id,
+        type: q.questionType || 'multiple-choice',
+        question: q.questionText,
+        options: q.options?.map((opt: any) => opt.text),
+        difficulty: q.difficulty || 'Medium',
+        points: q.points || 10,
+        codeTemplate: q.codeTemplate,
+        language: q.language
+      }));
+
+      setTestData(formattedQuestions);
+      
+      // Set custom time limit for AI test
+      const timeLimit = parsedTestData.metadata?.timeLimit || 1800;
+      setTimeRemaining(timeLimit);
+
+      console.log('✅ AI test initialized with', formattedQuestions.length, 'questions');
+      
+    } catch (error) {
+      console.error('❌ Error loading AI test:', error);
+      // Fallback to regular test or go back to learn page
+      router.push('/learn');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const initializeTest = async () => {
     try {

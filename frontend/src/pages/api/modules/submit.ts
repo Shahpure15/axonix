@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import * as fs from 'fs';
 import * as path from 'path';
-import { sendModuleSubmission } from '@/lib/worqhat';
+import { sendModuleSubmission } from '@/lib/qraptor';
 
 interface UserData {
   id: string;
@@ -78,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ error: 'Module not found in user\'s learning path' });
       }
 
-      // Send to Worqhat and get recommended subtasks
+      // Send to Qraptor and get recommended subtasks
       const subtasks = await sendModuleSubmission({
         userId,
         moduleId,

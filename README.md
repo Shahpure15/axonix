@@ -178,7 +178,7 @@ The platform follows a microservices architecture with 10 core services:
 
 - Node.js 18+ and pnpm
 - PostgreSQL 14+
-[# Worqhat MVP
+# Qraptor MVP
 - Docker (for development services)
 
 ### Installation

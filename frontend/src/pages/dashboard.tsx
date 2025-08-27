@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '@/lib/auth';
-import { analyticsApi, srsApi } from '@/lib/api';
+import { analyticsApi, srsApi, dashboardApi } from '@/lib/api';
 import { userStorage, getDomainById, UserData } from '@/lib/userData';
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { DiagnosticTestCard } from '@/components/dashboard/DiagnosticTestCard';
 import { 
   Brain, 
   Clock, 
@@ -58,14 +59,46 @@ interface DashboardStats {
   weeklyGoal: { current: number; target: number; };
 }
 
+interface DashboardData {
+  userProfile: {
+    name: string;
+    email: string;
+    xp: number;
+    level: number;
+    onboardingCompleted: boolean;
+    experienceLevel?: string;
+  };
+  preferredDomains: string[];
+  diagnosticTests: {
+    domain: string;
+    domainDisplayName: string;
+    completed: boolean;
+    attempts: number;
+    bestScore: number;
+    lastAttemptDate: string | null;
+    canAttempt: boolean;
+    status: 'completed' | 'not-started';
+    recommendation: string;
+  }[];
+  recentTestSessions: any[];
+  stats: {
+    totalDomains: number;
+    completedTests: number;
+    totalAttempts: number;
+    averageScore: number;
+  };
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [pendingTests, setPendingTests] = useState<string[]>([]);
   const [completedTests, setCompletedTests] = useState<string[]>([]);
   const [userDomains, setUserDomains] = useState<string[]>([]);
+  const [learningProgress, setLearningProgress] = useState<any>(null);
   const [allTestsCompleted, setAllTestsCompleted] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
@@ -103,6 +136,7 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       console.log('Loading dashboard data...');
+      setIsLoadingData(true);
       
       // Get current user from auth store
       if (!user || !user.user_id) {
@@ -111,7 +145,69 @@ export default function Dashboard() {
         return;
       }
 
-      const currentUserId = user.user_id;
+      // Load dashboard data from new API
+      try {
+        const response = await dashboardApi.getDashboardData();
+        if (response.success) {
+          console.log('Dashboard data loaded:', response.data);
+          setDashboardData(response.data);
+          
+          // Update legacy state for compatibility
+          setUserDomains(response.data.preferredDomains);
+          setCompletedTests(response.data.diagnosticTests.filter((test: any) => test.completed).map((test: any) => test.domain));
+          setPendingTests(response.data.diagnosticTests.filter((test: any) => !test.completed).map((test: any) => test.domain));
+          setAllTestsCompleted(response.data.stats.completedTests === response.data.stats.totalDomains);
+        } else {
+          console.error('Failed to load dashboard data:', response.message);
+        }
+      } catch (dashboardError) {
+        console.error('Error loading dashboard data:', dashboardError);
+        // Fallback to legacy loading if new API fails
+        await loadLegacyDashboardData();
+      }
+
+      // Load additional analytics and progress data
+      await loadAnalyticsData();
+      
+    } catch (error) {
+      console.error('❌ Dashboard loading error:', error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const loadAnalyticsData = async () => {
+    try {
+      const [progress, dueItems] = await Promise.all([
+        analyticsApi.getProgress(),
+        srsApi.getDueItems(),
+      ]);
+
+      setStats({
+        streakDays: progress.streakDays || 0,
+        totalHoursLearned: progress.totalHoursLearned || 0,
+        masteryProgress: progress.masteryVectors || [],
+        dueItems: dueItems?.length || 0,
+        recentSessions: progress.recentSessions || [],
+        weeklyGoal: progress.weeklyGoal || { current: 0, target: 5 },
+      });
+    } catch (error) {
+      console.error('Failed to load analytics data:', error);
+      // Set default values on error
+      setStats({
+        streakDays: 0,
+        totalHoursLearned: 0,
+        masteryProgress: [],
+        dueItems: 0,
+        recentSessions: [],
+        weeklyGoal: { current: 0, target: 5 },
+      });
+    }
+  };
+
+  const loadLegacyDashboardData = async () => {
+    try {
+      const currentUserId = user?.user_id;
 
       // Load user data from our API
       try {
@@ -120,13 +216,13 @@ export default function Dashboard() {
           console.log('User data not found, using auth store data');
           // Create basic user data from auth store if file doesn't exist yet
           setCurrentUser({
-            id: user.user_id,
-            email: user.email,
+            id: user!.user_id,
+            email: user!.email,
             password: '', // We don't store passwords in frontend
-            name: user.name,
+            name: user!.name,
             onboardingCompleted: false,
             onboarding_status: 'not_started',
-            createdAt: (user.created_at || new Date()).toISOString(),
+            createdAt: (user!.created_at || new Date()).toISOString(),
             lastLogin: new Date().toISOString()
           });
         } else {
@@ -140,9 +236,16 @@ export default function Dashboard() {
         return;
       }
 
-      // Check onboarding status from separate file
+      // Check onboarding status from MongoDB backend
       try {
-        const onboardingResponse = await fetch(`/api/onboarding?userId=${currentUserId}`);
+        const token = localStorage.getItem('access_token');
+        const onboardingResponse = await fetch(`http://localhost:5000/api/onboarding`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
         if (onboardingResponse.ok) {
           const onboardingResult = await onboardingResponse.json();
           console.log('Onboarding data found:', onboardingResult.data);
@@ -151,6 +254,25 @@ export default function Dashboard() {
           const selectedDomains = onboardingResult.data.domains || [];
           setUserDomains(selectedDomains);
           console.log('User selected domains:', selectedDomains);
+          
+          // Get learning progress data
+          try {
+            const progressResponse = await fetch(`http://localhost:5000/api/progress`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+            
+            if (progressResponse.ok) {
+              const progressResult = await progressResponse.json();
+              console.log('Learning progress data:', progressResult.data);
+              setLearningProgress(progressResult.data);
+            }
+          } catch (progressError) {
+            console.error('Error loading learning progress:', progressError);
+          }
           
           // Get diagnostic test data
           const diagnosticResponse = await fetch(`/api/diagnostic?userId=${currentUserId}`);
@@ -232,9 +354,16 @@ export default function Dashboard() {
       return;
     }
 
-    // Check onboarding status from separate file
+    // Check onboarding status from MongoDB backend
     try {
-      const onboardingResponse = await fetch(`/api/onboarding?userId=${currentUserId}`);
+      const token = localStorage.getItem('access_token');
+      const onboardingResponse = await fetch(`http://localhost:5000/api/onboarding`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       
       if (!onboardingResponse.ok) {
         console.log('❌ Onboarding not completed - redirecting to onboarding');
@@ -350,8 +479,84 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Pending Diagnostic Tests - Only show if there are pending tests */}
-        {currentUser && !allTestsCompleted && pendingTests.length > 0 && (
+        {/* Diagnostic Tests Section */}
+        {dashboardData && dashboardData.diagnosticTests.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center space-x-2">
+                <Brain className="h-5 w-5 text-indigo-600" />
+                <CardTitle>Diagnostic Tests</CardTitle>
+              </div>
+              <CardDescription>
+                Complete diagnostic tests to unlock personalized learning paths for your selected domains
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {dashboardData.diagnosticTests.map((test) => (
+                  <DiagnosticTestCard 
+                    key={test.domain} 
+                    test={test}
+                    onTestStarted={() => loadDashboardData()} // Refresh data when test is started
+                  />
+                ))}
+              </div>
+              
+              {/* Summary Stats */}
+              <div className="mt-6 pt-6 border-t">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-indigo-600">{dashboardData.stats.totalDomains}</div>
+                    <div className="text-sm text-gray-600">Total Domains</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-green-600">{dashboardData.stats.completedTests}</div>
+                    <div className="text-sm text-gray-600">Completed Tests</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-orange-600">{dashboardData.stats.totalAttempts}</div>
+                    <div className="text-sm text-gray-600">Total Attempts</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {dashboardData.stats.averageScore > 0 ? Math.round(dashboardData.stats.averageScore) : 0}%
+                    </div>
+                    <div className="text-sm text-gray-600">Average Score</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Fallback for users without onboarding or no diagnostic tests */}
+        {(!dashboardData || dashboardData.diagnosticTests.length === 0) && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-orange-500" />
+                <CardTitle>Get Started</CardTitle>
+              </div>
+              <CardDescription>
+                Complete your onboarding to access personalized diagnostic tests
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center py-8">
+              <Brain className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">No Diagnostic Tests Available</h3>
+              <p className="text-gray-600 mb-4">
+                Complete your onboarding to select your learning domains and unlock diagnostic tests.
+              </p>
+              <Button onClick={() => router.push('/onboarding')}>
+                <User className="mr-2 h-4 w-4" />
+                Complete Onboarding
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Legacy Pending Diagnostic Tests - Keep for backward compatibility */}
+        {!dashboardData && currentUser && !allTestsCompleted && pendingTests.length > 0 && (
           <Card>
             <CardHeader>
               <div className="flex items-center space-x-2">
@@ -523,15 +728,23 @@ export default function Dashboard() {
                   const domain = getDomainById(domainId);
                   if (!domain) return null;
                   
-                  // Mock progress data - in real app, this would come from API
-                  const mockProgress = {
-                    completed: Math.floor(Math.random() * 80) + 10,
-                    total: 100,
-                    streak: Math.floor(Math.random() * 15) + 1,
-                    lastSession: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
+                  // Get real progress data from state (will be fetched from API)
+                  const domainProgress = learningProgress?.domains?.find(d => d.domainName === domainId);
+                  const progressData = domainProgress ? {
+                    completed: domainProgress.completedModules || 0,
+                    total: Math.max(domainProgress.totalModules || 10, 10), // Minimum 10 modules
+                    streak: learningProgress?.streak?.currentStreak || 0,
+                    lastSession: domainProgress.modules?.length > 0 ? 
+                      domainProgress.modules[domainProgress.modules.length - 1]?.completedAt || new Date() : 
+                      new Date()
+                  } : {
+                    completed: 0,
+                    total: 10,
+                    streak: 0,
+                    lastSession: new Date()
                   };
                   
-                  const progressPercentage = (mockProgress.completed / mockProgress.total) * 100;
+                  const progressPercentage = (progressData.completed / progressData.total) * 100;
                   
                   return (
                     <div key={domainId} className="space-y-3 p-4 bg-gradient-to-r from-axonix-50 to-axonix-100 rounded-lg border border-axonix-200">
@@ -543,17 +756,17 @@ export default function Dashboard() {
                           <div>
                             <h4 className="font-semibold text-axonix-800">{domain.name}</h4>
                             <p className="text-sm text-axonix-600">
-                              {mockProgress.completed}/{mockProgress.total} concepts
+                              {progressData.completed}/{progressData.total} concepts
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="flex items-center space-x-2">
                             <Flame className="h-4 w-4 text-orange-500" />
-                            <span className="text-sm font-medium text-axonix-700">{mockProgress.streak} day streak</span>
+                            <span className="text-sm font-medium text-axonix-700">{progressData.streak} day streak</span>
                           </div>
                           <p className="text-xs text-axonix-600">
-                            Last: {mockProgress.lastSession.toLocaleDateString()}
+                            Last: {new Date(progressData.lastSession).toLocaleDateString()}
                           </p>
                         </div>
                       </div>

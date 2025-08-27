@@ -1,16 +1,16 @@
 import axios from 'axios';
 
-const WORQHAT_API_URL = process.env.WORQHAT_API_URL || 'https://api.worqhat.com';
-const WORQHAT_API_KEY = process.env.WORQHAT_API_KEY;
+const QRAPTOR_API_URL = process.env.QRAPTOR_API_URL || 'https://api.qraptor.com';
+const QRAPTOR_API_KEY = process.env.QRAPTOR_API_KEY;
 
-if (!WORQHAT_API_KEY) {
-  console.warn('WORQHAT_API_KEY not set in environment variables');
+if (!QRAPTOR_API_KEY) {
+  console.warn('QRAPTOR_API_KEY not set in environment variables');
 }
 
-const worqhatClient = axios.create({
-  baseURL: WORQHAT_API_URL,
+const qraptorClient = axios.create({
+  baseURL: QRAPTOR_API_URL,
   headers: {
-    'Authorization': `Bearer ${WORQHAT_API_KEY}`,
+    'Authorization': `Bearer ${QRAPTOR_API_KEY}`,
     'Content-Type': 'application/json'
   }
 });
@@ -96,27 +96,27 @@ export interface WorkflowResponse {
 
 export async function sendDiagnosticEvent(event: DiagnosticEvent): Promise<void> {
   try {
-    await worqhatClient.post('/events/diagnostic', {
+    await qraptorClient.post('/events/diagnostic', {
       ...event,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error sending diagnostic event to Worqhat:', error);
+    console.error('Error sending diagnostic event to Qraptor:', error);
     throw error;
   }
 }
 
 export async function sendModuleSubmission(event: ModuleSubmissionEvent): Promise<SubTask[]> {
   try {
-    const response = await worqhatClient.post('/events/module-submission', {
+    const response = await qraptorClient.post('/events/module-submission', {
       ...event,
       timestamp: new Date().toISOString()
     });
     
-    // Worqhat will analyze the submission and return recommended subtasks
+    // Qraptor will analyze the submission and return recommended subtasks
     return response.data.subtasks;
   } catch (error) {
-    console.error('Error sending module submission to Worqhat:', error);
+    console.error('Error sending module submission to Qraptor:', error);
     throw error;
   }
 }
@@ -154,7 +154,7 @@ export async function generatePersonalizedSubtasks(request: SubtaskGenerationReq
     const weakAreas = analyzeWeakAreas(answers, performance);
     const strengths = analyzeStrengths(answers, performance);
     
-    // Generate subtasks using Worqhat AI
+    // Generate subtasks using Qraptor AI
     const prompt = `
       Based on the following user performance data, generate 3-5 personalized subtasks for continuous improvement:
       
@@ -189,7 +189,7 @@ export async function generatePersonalizedSubtasks(request: SubtaskGenerationReq
       }
     `;
 
-    const response = await fetch('/api/worqhat', {
+    const response = await fetch('/api/qraptor', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -203,7 +203,7 @@ export async function generatePersonalizedSubtasks(request: SubtaskGenerationReq
     });
 
     if (!response.ok) {
-      throw new Error(`Worqhat API error: ${response.status}`);
+      throw new Error(`Qraptor API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -321,15 +321,15 @@ function generateFallbackSubtasks(performance: UserPerformance, moduleId: string
   ];
 }
 
-// Create personalized learning workflow using WorqHat AI
+// Create personalized learning workflow using Qraptor AI
 export async function createLearningWorkflow(request: WorkflowRequest): Promise<WorkflowResponse> {
   try {
     const workflowDescription = generateWorkflowDescription(request);
     
-    const response = await fetch(`${WORQHAT_API_URL}/api/ai/content/v4`, {
+    const response = await fetch(`${QRAPTOR_API_URL}/api/ai/content/v4`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${WORQHAT_API_KEY}`,
+        'Authorization': `Bearer ${QRAPTOR_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -341,7 +341,7 @@ export async function createLearningWorkflow(request: WorkflowRequest): Promise<
     });
 
     if (!response.ok) {
-      throw new Error(`WorqHat API error: ${response.status}`);
+      throw new Error(`Qraptor API error: ${response.status}`);
     }
 
     const data = await response.json();

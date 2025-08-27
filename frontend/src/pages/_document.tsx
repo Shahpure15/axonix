@@ -10,19 +10,19 @@ export default function Document() {
         <meta name="theme-color" content="#2563eb" />
         
         {/* App Meta */}
-        <meta name="description" content="Worqhat - Adaptive Learning Platform with AI-powered intelligent questioning" />
+        <meta name="description" content="Qraptor - Adaptive Learning Platform with AI-powered intelligent questioning" />
         <meta name="keywords" content="learning, education, AI, intelligent learning, programming, technology" />
-        <meta name="author" content="Worqhat" />
+        <meta name="author" content="Qraptor" />
         
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="Worqhat" />
+        <meta property="og:title" content="Qraptor" />
         <meta property="og:description" content="Adaptive Learning Platform with AI-powered intelligent questioning" />
         <meta property="og:image" content="/favicon.svg" />
         
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:title" content="Worqhat" />
+        <meta property="twitter:title" content="Qraptor" />
         <meta property="twitter:description" content="Adaptive Learning Platform with AI-powered intelligent questioning" />
         <meta property="twitter:image" content="/favicon.svg" />
       </Head>

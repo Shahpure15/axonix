@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { generatePersonalizedSubtasks } from '@/lib/worqhat';
+import { generatePersonalizedSubtasks } from '@/lib/qraptor';
 
 interface AnalysisRequest {
   sessionData: {
@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const responsePatterns = analyzeResponsePatterns(sessionData.answers, testQuestions);
       
       try {
-        // Try to get AI-generated subtasks from Worqhat
+        // Try to get AI-generated subtasks from Qraptor
         const aiSubtasks = await generatePersonalizedSubtasks({
           userId: 'current-user',
           moduleId: sessionData.moduleId,
@@ -80,8 +80,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           return res.status(200).json(feedback);
         }
-      } catch (worqhatError) {
-        console.log('Worqhat AI unavailable, using enhanced fallback');
+      } catch (qraptorError) {
+        console.log('Qraptor AI unavailable, using enhanced fallback');
       }
 
       // Enhanced fallback with better analysis

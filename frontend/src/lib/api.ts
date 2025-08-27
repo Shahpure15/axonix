@@ -200,6 +200,29 @@ export const analyticsApi = {
   },
 };
 
+// Dashboard API
+export const dashboardApi = {
+  getDashboardData: async (): Promise<any> => {
+    const response = await apiClient.get('/api/dashboard');
+    return handleApiResponse(response);
+  },
+
+  startDiagnosticTest: async (domain: string): Promise<any> => {
+    const response = await apiClient.post('/api/dashboard/diagnostic-test/start', { domain });
+    return handleApiResponse(response);
+  },
+
+  completeDiagnosticTest: async (sessionId: string, score: number, percentage: number, totalTimeSpent: number): Promise<any> => {
+    const response = await apiClient.post('/api/dashboard/diagnostic-test/complete', {
+      sessionId,
+      score,
+      percentage,
+      totalTimeSpent
+    });
+    return handleApiResponse(response);
+  },
+};
+
 // Admin API
 export const adminApi = {
   getSessions: async (params?: any): Promise<any> => {

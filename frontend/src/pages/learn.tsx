@@ -4,7 +4,7 @@ import { useAuthStore } from '@/lib/auth';
 import { useSession } from '@/hooks/useSession';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import LearningSession from '@/components/learning/LearningSession';
-import WorqhatWorkflow from '@/components/learning/WorqhatWorkflow';
+import QraptorWorkflow from '@/components/learning/QraptorWorkflow';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -86,7 +86,14 @@ export default function LearnPage() {
       if (!currentUserId) return;
 
       try {
-        const onboardingResponse = await fetch(`/api/onboarding?userId=${currentUserId}`);
+        const token = localStorage.getItem('access_token');
+        const onboardingResponse = await fetch(`http://localhost:5000/api/onboarding`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
         if (onboardingResponse.ok) {
           const onboardingResult = await onboardingResponse.json();
           const selectedDomains = onboardingResult.data.domains || [];
@@ -127,12 +134,69 @@ export default function LearnPage() {
 
     setIsStarting(true);
     try {
-      console.log('🚀 Starting WorqHat workflow session');
-      setShowWorkflow(true);
+      console.log('🚀 Starting AI-powered session');
+      
+      // Check if this is a review mode - use our AI test generation
+      if (selectedMode === 'review') {
+        await handleAITestGeneration();
+      } else {
+        // Use Qraptor workflow for other modes
+        setShowWorkflow(true);
+      }
     } catch (error) {
       console.error('Failed to start session:', error);
     } finally {
       setIsStarting(false);
+    }
+  };
+
+  /**
+   * Handle AI Test Generation for Review Mode
+   */
+  const handleAITestGeneration = async () => {
+    try {
+      console.log('🤖 Generating AI-powered test...');
+      
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+
+      // Step 1: Call our AI test generation API
+      const response = await fetch('/api/ai-test/generate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          domain: selectedDomain,
+          testType: selectedMode,
+          questionCount: 10
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate AI test');
+      }
+
+      // Step 2: Receive AI-generated test data
+      const aiTestData = await response.json();
+      console.log('✅ AI test generated:', aiTestData);
+
+      // Step 3: Store AI test data in session storage for test page
+      sessionStorage.setItem('aiGeneratedTest', JSON.stringify(aiTestData.data));
+      
+      // Step 4: Navigate to AI test interface
+      router.push(`/test?ai=true&testId=${aiTestData.data.testId}&domain=${selectedDomain}`);
+
+    } catch (error) {
+      console.error('❌ AI test generation failed:', error);
+      
+      // Fallback to regular workflow
+      console.log('🔄 Falling back to regular workflow...');
+      setShowWorkflow(true);
     }
   };
 
@@ -171,11 +235,11 @@ export default function LearnPage() {
     );
   }
 
-  // If workflow is active, show the WorqHat workflow
+  // If workflow is active, show the Qraptor workflow
   if (showWorkflow && user && selectedMode && selectedDomain) {
     return (
       <DashboardLayout>
-        <WorqhatWorkflow
+        <QraptorWorkflow
           userId={user.user_id}
           learningMode={selectedMode as 'diagnostic' | 'learning' | 'practice' | 'review'}
           domain={selectedDomain}
@@ -196,7 +260,7 @@ export default function LearnPage() {
             <Brain className="h-8 w-8 text-socratic-wingman-700" />
             <span className="text-socratic-wingman-800">AI-Powered Learning</span>
             <Badge className="bg-gradient-to-r from-socratic-wingman-600 to-socratic-wingman-700 text-white border-0">
-              WorqHat
+              Qraptor
             </Badge>
           </h1>
           <p className="text-socratic-wingman-600">
@@ -321,13 +385,13 @@ export default function LearnPage() {
                         <Zap className="mr-2 h-4 w-4" />
                         Start AI-Powered Session
                         <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-0">
-                          WorqHat
+                          Qraptor
                         </Badge>
                       </>
                     )}
                   </Button>
                   <p className="text-xs text-axonix-600 text-center mt-2">
-                    Personalized by WorqHat AI • Adaptive Learning Experience
+                    Personalized by Qraptor AI • Adaptive Learning Experience
                   </p>
                 </div>
               </div>

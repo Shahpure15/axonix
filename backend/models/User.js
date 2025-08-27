@@ -86,6 +86,32 @@ const userSchema = new mongoose.Schema({
       type: Date,
       required: false
     }
+  },
+  diagnosticTests: {
+    type: Map,
+    of: {
+      completed: {
+        type: Boolean,
+        default: false
+      },
+      attempts: {
+        type: Number,
+        default: 0
+      },
+      bestScore: {
+        type: Number,
+        default: 0
+      },
+      lastAttemptDate: {
+        type: Date,
+        default: null
+      },
+      testSessionIds: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'TestSession'
+      }]
+    },
+    default: {}
   }
 }, {
   timestamps: true, // Adds createdAt and updatedAt automatically
@@ -177,6 +203,8 @@ userSchema.virtual('profile').get(function() {
 // Ensure virtual fields are serialized
 userSchema.set('toJSON', { virtuals: true });
 
-const User = mongoose.model('User', userSchema);
+// Use environment variable for collection name
+const collectionName = process.env.USERS_COLLECTION || 'users';
+const User = mongoose.model('User', userSchema, collectionName);
 
 module.exports = User;

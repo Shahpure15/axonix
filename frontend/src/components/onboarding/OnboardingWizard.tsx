@@ -184,6 +184,29 @@ export default function OnboardingWizard() {
 
       console.log('✅ Onboarding data saved successfully:', result);
 
+      // Initialize learning progress
+      try {
+        const progressResponse = await fetch('http://localhost:5000/api/progress/initialize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${tokens.access_token}`,
+          },
+          body: JSON.stringify({
+            domains: selectedDomains,
+            experienceLevel: selectedExperienceLevel,
+          }),
+        });
+
+        const progressResult = await progressResponse.json();
+        if (progressResult.success) {
+          console.log('✅ Learning progress initialized:', progressResult);
+        }
+      } catch (progressError) {
+        console.error('❌ Failed to initialize learning progress:', progressError);
+        // Don't block the flow if this fails
+      }
+
       // Show success animation
       setIsSuccess(true);
       

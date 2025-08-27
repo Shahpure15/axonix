@@ -45,15 +45,15 @@ export const userStorage = {
   // Save onboarding data - SAME TO SAME like signup
   saveOnboardingData: async (userId: string, email: string, name: string, domains: string[], experience_level: string, preferred_study_time: string, timezone: string): Promise<any> => {
     try {
-      const response = await fetch('/api/onboarding', {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('http://localhost:5000/api/onboarding', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ 
           userId, 
-          email, 
-          name, 
           domains, 
           experience_level, 
           preferred_study_time, 
@@ -64,10 +64,10 @@ export const userStorage = {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Onboarding save failed');
+        throw new Error(data.message || 'Onboarding save failed');
       }
 
-      console.log('✅ Onboarding data saved successfully to onboarding.json:', data);
+      console.log('✅ Onboarding data saved successfully to MongoDB:', data);
       return data;
     } catch (error) {
       console.error('❌ Onboarding save error:', error);
@@ -107,25 +107,12 @@ export const userStorage = {
     }
   },
 
-  // Update user onboarding status in users.json - SAME TO SAME like signup
+  // Update user onboarding status - MongoDB backend handles this automatically
   updateUserOnboardingStatus: async (userId: string): Promise<any> => {
     try {
-      const response = await fetch('/api/users/onboarding-status', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update onboarding status');
-      }
-
-      console.log('✅ User onboarding status updated in users.json:', data);
-      return data;
+      // MongoDB backend already updates onboardingCompleted when saving onboarding data
+      console.log('✅ User onboarding status updated in MongoDB (handled by backend)');
+      return { success: true, message: 'Onboarding status updated' };
     } catch (error) {
       console.error('❌ Failed to update onboarding status:', error);
       throw error;
@@ -135,7 +122,14 @@ export const userStorage = {
   // Get onboarding data for prefilling - SAME TO SAME like signup
   getOnboardingData: async (userId: string): Promise<any> => {
     try {
-      const response = await fetch(`/api/onboarding?userId=${userId}`);
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`http://localhost:5000/api/onboarding`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -214,7 +208,14 @@ export const userStorage = {
   // Get user by ID
   getUser: async (userId: string): Promise<UserData | null> => {
     try {
-      const response = await fetch(`/api/users?userId=${userId}`);
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`http://localhost:5000/auth/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       
       if (!response.ok) {
         if (response.status === 404) {

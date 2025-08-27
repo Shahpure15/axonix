@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import * as fs from 'fs';
 import * as path from 'path';
-import { sendDiagnosticEvent, getTemplatedRoadmap } from '@/lib/worqhat';
+import { sendDiagnosticEvent, getTemplatedRoadmap } from '@/lib/qraptor';
 
 interface UserData {
   id: string;
@@ -48,7 +48,7 @@ const writeDatabase = (database: Database): void => {
   }
 };
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'PUT') {
     // Update diagnostic test status
     try {
@@ -76,8 +76,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       if (score !== undefined) {
         user.diagnosticTests[domainId].score = score;
 
-        // Send event to Worqhat
-        async sendDiagnosticEvent({
+        // Send event to Qraptor
+        await sendDiagnosticEvent({
           userId,
           domainId,
           score
