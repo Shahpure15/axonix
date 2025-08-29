@@ -2,9 +2,9 @@
   "name": "socratic-wingman-backend",
   "version": "1.0.0",
   "description": "MongoDB-based authentication backend for SocraticWingman",
-  "main": "server.js",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node server.js",
+  "start": "node dist/server.js",
     "dev": "nodemon server.js",
     "build": "tsc",
     "build:watch": "tsc --watch",
