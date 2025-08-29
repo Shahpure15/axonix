@@ -1,4 +1,7 @@
 /**
+// Renamed to prevent Vercel from using this as entrypoint. Use dist/server.js instead.
+// This file has been renamed to server.original.js
+/**
  * SocraticWingman Backend Server
  * MongoDB-based authentication server using Express.js
  */
