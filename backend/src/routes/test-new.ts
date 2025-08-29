@@ -48,6 +48,7 @@ router.post('/create', authenticateToken, async (req: AuthenticatedRequest, res:
       success: true,
       data: testSession
     });
+    return;
 
   } catch (error: any) {
     console.error('Error creating test session:', error);
@@ -55,6 +56,7 @@ router.post('/create', authenticateToken, async (req: AuthenticatedRequest, res:
       error: 'Failed to create test session',
       details: error.message 
     });
+    return;
   }
 });
 
@@ -103,6 +105,7 @@ router.post('/submit', authenticateToken, async (req: AuthenticatedRequest, res:
       success: true,
       data: result
     });
+    return;
 
   } catch (error: any) {
     console.error('Error submitting test answers:', error);
@@ -110,6 +113,7 @@ router.post('/submit', authenticateToken, async (req: AuthenticatedRequest, res:
       error: 'Failed to submit test answers',
       details: error.message 
     });
+    return;
   }
 });
 
@@ -136,6 +140,7 @@ router.get('/session/:sessionId', authenticateToken, async (req: AuthenticatedRe
       success: true,
       data: testSession
     });
+    return;
 
   } catch (error: any) {
     console.error('Error getting test session:', error);
@@ -143,6 +148,7 @@ router.get('/session/:sessionId', authenticateToken, async (req: AuthenticatedRe
       error: 'Failed to get test session',
       details: error.message 
     });
+    return;
   }
 });
 
@@ -179,6 +185,7 @@ router.get('/history', authenticateToken, async (req: AuthenticatedRequest, res:
       success: true,
       data: history
     });
+    return;
 
   } catch (error: any) {
     console.error('Error getting test history:', error);
@@ -186,6 +193,7 @@ router.get('/history', authenticateToken, async (req: AuthenticatedRequest, res:
       error: 'Failed to get test history',
       details: error.message 
     });
+    return;
   }
 });
 
@@ -226,6 +234,7 @@ router.get('/analytics', authenticateToken, async (req: AuthenticatedRequest, re
       success: true,
       data: analytics
     });
+    return;
 
   } catch (error: any) {
     console.error('Error getting user analytics:', error);
@@ -233,6 +242,7 @@ router.get('/analytics', authenticateToken, async (req: AuthenticatedRequest, re
       error: 'Failed to get user analytics',
       details: error.message 
     });
+    return;
   }
 });
 
@@ -259,6 +269,7 @@ router.put('/abandon/:sessionId', authenticateToken, async (req: AuthenticatedRe
       success: true,
       message: 'Test session abandoned successfully'
     });
+    return;
 
   } catch (error: any) {
     console.error('Error abandoning test session:', error);
@@ -266,6 +277,7 @@ router.put('/abandon/:sessionId', authenticateToken, async (req: AuthenticatedRe
       error: 'Failed to abandon test session',
       details: error.message 
     });
+    return;
   }
 });
 
@@ -294,6 +306,7 @@ router.get('/domain-stats/:domain', authenticateToken, async (req: Authenticated
         lowestScore: 0
       }
     });
+    return;
 
   } catch (error: any) {
     console.error('Error getting domain statistics:', error);
@@ -301,6 +314,7 @@ router.get('/domain-stats/:domain', authenticateToken, async (req: Authenticated
       error: 'Failed to get domain statistics',
       details: error.message 
     });
+    return;
   }
 });
 
