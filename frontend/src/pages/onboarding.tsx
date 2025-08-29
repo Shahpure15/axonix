@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '@/lib/env';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '@/lib/auth';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
@@ -19,7 +20,7 @@ export default function OnboardingPage() {
       try {
         // Check onboarding status from MongoDB backend
         const token = localStorage.getItem('access_token');
-        const response = await fetch('http://localhost:5000/api/onboarding', {
+  const response = await fetch(`${API_BASE_URL}/api/onboarding`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

@@ -2,8 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { ApiResponse, AuthToken } from '@/types';
 import { safeLocalStorage } from './storage';
 
-// API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { API_BASE_URL } from './env';
 
 // Create axios instance with default config
 const apiClient = axios.create({

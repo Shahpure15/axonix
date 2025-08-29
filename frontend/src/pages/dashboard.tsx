@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '@/lib/env';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '@/lib/auth';
 import { analyticsApi, srsApi, dashboardApi } from '@/lib/api';
@@ -239,7 +240,7 @@ export default function Dashboard() {
       // Check onboarding status from MongoDB backend
       try {
         const token = localStorage.getItem('access_token');
-        const onboardingResponse = await fetch(`http://localhost:5000/api/onboarding`, {
+  const onboardingResponse = await fetch(`${API_BASE_URL}/api/onboarding`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -257,7 +258,7 @@ export default function Dashboard() {
           
           // Get learning progress data
           try {
-            const progressResponse = await fetch(`http://localhost:5000/api/progress`, {
+            const progressResponse = await fetch(`${API_BASE_URL}/api/progress`, {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
@@ -357,7 +358,7 @@ export default function Dashboard() {
     // Check onboarding status from MongoDB backend
     try {
       const token = localStorage.getItem('access_token');
-      const onboardingResponse = await fetch(`http://localhost:5000/api/onboarding`, {
+  const onboardingResponse = await fetch(`${API_BASE_URL}/api/onboarding`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

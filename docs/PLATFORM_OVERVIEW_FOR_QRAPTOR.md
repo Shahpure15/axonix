@@ -158,7 +158,7 @@ graph TD
 
 #### **🛠️ Development & DevOps Tools**
 - **Package Management**: 
-  - npm/pnpm for dependency management
+  - npm for dependency management
   - Workspaces for monorepo structure
 - **Code Quality**:
   - ESLint for code linting

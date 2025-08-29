@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '@/lib/env';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '@/lib/auth';
 import { useSession } from '@/hooks/useSession';
@@ -87,7 +88,7 @@ export default function LearnPage() {
 
       try {
         const token = localStorage.getItem('access_token');
-        const onboardingResponse = await fetch(`http://localhost:5000/api/onboarding`, {
+  const onboardingResponse = await fetch(`${API_BASE_URL}/api/onboarding`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
