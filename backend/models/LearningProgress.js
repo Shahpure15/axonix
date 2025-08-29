@@ -118,7 +118,7 @@ const learningProgressSchema = new mongoose.Schema({
 });
 
 // Indexes
-learningProgressSchema.index({ userId: 1 });
+// Note: userId already has unique index, no need for additional index
 learningProgressSchema.index({ 'domains.domainName': 1 });
 learningProgressSchema.index({ overallXP: -1 });
 

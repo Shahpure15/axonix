@@ -194,7 +194,7 @@ const userPerformanceAnalyticsSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
-userPerformanceAnalyticsSchema.index({ userId: 1 });
+// Note: userId already has unique index, no need for additional index
 userPerformanceAnalyticsSchema.index({ 'domainMetrics.domain': 1 });
 userPerformanceAnalyticsSchema.index({ 'responseHistory.topic': 1 });
 userPerformanceAnalyticsSchema.index({ 'aiAnalysis.lastAnalyzed': 1 });

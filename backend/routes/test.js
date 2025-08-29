@@ -1,7 +1,6 @@
-/**
- * Test Routes for SocraticWingman
- * Handles diagnostic tests, quizzes, and assessments using domain-specific collections
- */
+// Test Routes for SocraticWingman
+// Handles diagnostic tests, quizzes, and assessments using domain-specific collections
+const axios = require('axios'); // For HTTP requests
 
 const express = require('express');
 const jwt = require('jsonwebtoken');
@@ -211,6 +210,77 @@ router.post('/submit', authenticateToken, async (req, res) => {
     // Grade the test
     let correctAnswers = 0;
     let totalScore = 0;
+
+    // --- qRaptor Grader Integration ---
+    // For each answer, send to qRaptor grader workflow and get grading info
+    // Replace [PASTE_YOUR_GRADER_WORKFLOW_URL_HERE] with your actual endpoint
+  const graderUrl = '[PASTE_YOUR_GRADER_WORKFLOW_URL_HERE]';
+    // Collect grading results for each answer
+    for (let i = 0; i < answers.length; i++) {
+      const { domainId, subdomainId, taskId, userAnswer } = answers[i];
+      let score = null, feedback = null, confidence = null, suggestions = [];
+      try {
+        // 1. Make POST request to qRaptor grader workflow
+        const graderResponse = await axios.post('[PASTE_YOUR_GRADER_WORKFLOW_URL]', {
+          user_id: userId,
+          domain_id: domainId,
+          subdomain_id: subdomainId,
+          task_id: taskId,
+          user_answer: userAnswer
+        });
+        // 2. Extract grading info from response
+        const graderResult = graderResponse.data;
+        score = graderResult.score;
+        feedback = graderResult.feedback;
+        confidence = graderResult.confidence;
+        suggestions = graderResult.suggestions;
+        answers[i].grading = { score, feedback, confidence, suggestions };
+      } catch (err) {
+        // Error handling for failed grader request
+        answers[i].grading = {
+          score: null,
+          feedback: 'Grading failed',
+          confidence: null,
+          suggestions: []
+        };
+        console.error(`qRaptor grader error for answer ${i}:`, err.message);
+      }
+
+      // 3. Make POST request to qRaptor attempt recording workflow (do not block main response)
+      const attemptUrl = '[PASTE_YOUR_ATTEMPT_WORKFLOW_URL_HERE]';
+      const attemptBody = {
+        user_id: userId,
+        domain_id: domainId,
+        subdomain_id: subdomainId,
+        task_id: taskId,
+        user_answer: userAnswer,
+        score: score,
+        feedback: feedback
+      };
+      axios.post(attemptUrl, attemptBody)
+        .catch(err => {
+          // Log error but do not block main response
+          console.error(`qRaptor attempt recording error for answer ${i}:`, err.message);
+        });
+    }
+    // --- End qRaptor Grader Integration ---
+
+    // Prepare response for frontend using the first answer's grading (or aggregate as needed)
+    // If multiple answers, you may want to aggregate or return an array. Here, we use the first for simplicity.
+    let score = null, confidence = null, suggestions = [];
+    if (answers.length > 0 && answers[0].grading) {
+      score = answers[0].grading.score;
+      confidence = answers[0].grading.confidence;
+      suggestions = answers[0].grading.suggestions;
+    }
+
+    // Send grading response to frontend
+    return res.status(200).json({
+      score,
+      confidence,
+      suggestions,
+      status: 'graded'
+    });
 
     testSession.questions.forEach((q, index) => {
       const userAnswer = answers[index];

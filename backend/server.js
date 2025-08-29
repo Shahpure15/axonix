@@ -14,6 +14,8 @@ const progressRoutes = require('./routes/progress');
 const analyticsRoutes = require('./routes/analytics');
 const dashboardRoutes = require('./routes/dashboard');
 const aiTestRoutes = require('./routes/ai-test');
+const qraptorDataRoutes = require('./routes/qraptor-data-collection');
+const qraptorWorkflowRoutes = require('./routes/qraptor-workflow');
 
 // Load environment variables
 dotenv.config();
@@ -66,6 +68,8 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/ai-test', aiTestRoutes);
+app.use('/api/qraptor/data', qraptorDataRoutes);
+app.use('/api/qraptor/workflow', qraptorWorkflowRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

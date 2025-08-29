@@ -1,264 +1,202 @@
-# SocraticWingman - Full-Stack Setup
+# 🚀 SocraticWingman x qRaptor Integration
 
-This project has been reorganized into a proper frontend/backend structure with MongoDB authentication.
+> **AI-Powered Adaptive Learning Platform with Intelligent Subtask Generation**
 
-## Project Structure
+## 🎯 Overview
+SocraticWingman is an adaptive learning platform enhanced with qRaptor AI agents that automatically generate personalized practice problems based on user performance. When learners complete modules, our 2-agent workflow analyzes their strengths and weaknesses to create targeted subtasks for optimal learning progression.
 
-```
-axonix/
-├── frontend/           # Next.js React frontend
-│   ├── src/           # Frontend source code
-│   ├── public/        # Static assets
-│   ├── package.json   # Frontend dependencies
-│   └── .env.local     # Frontend environment variables
-├── backend/           # Node.js Express backend
-│   ├── models/        # MongoDB models
-│   ├── routes/        # API routes
-│   ├── db.js         # Database connection
-│   ├── server.js     # Express server
-│   ├── package.json  # Backend dependencies
-│   └── .env          # Backend environment variables
-├── data/             # JSON data files
-├── docs/             # Documentation
-├── package.json      # Root package.json for workspace management
-└── README.md         # This file
-```
-
-## Quick Start
-
-### 1. Install Dependencies
-```bash
-# Install all dependencies (frontend and backend)
-npm run setup
-
-# Or install separately
-npm run install:frontend
-npm run install:backend
-```
-
-### 2. Environment Setup
-
-**Frontend (.env.local):**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5000
-```
-
-**Backend (.env):**
-```env
-MONGODB_URI=mongodb://localhost:27017/socratic_wingman
-JWT_SECRET=your-secret-key
-PORT=5000
-FRONTEND_URL=http://localhost:3000
-```
-
-### 3. Start MongoDB
-Make sure MongoDB is running locally:
-```bash
-mongod
-```
-
-### 4. Development
-
-**Start both frontend and backend:**
-```bash
-npm run dev
-```
-
-**Start separately:**
-```bash
-# Frontend only (runs on http://localhost:3000)
-npm run frontend:dev
-
-# Backend only (runs on http://localhost:5000)
-npm run backend:dev
-```
-
-## API Endpoints
-
-The backend provides the following authentication endpoints:
-
-- `POST /auth/register` - Register a new user
-- `POST /auth/login` - Login user
-- `GET /auth/me` - Get current user profile (requires JWT token)
-
-## Frontend Integration
-
-The frontend is configured to communicate with the backend API:
-
-- API calls are made to `http://localhost:5000`
-- JWT tokens are stored in localStorage
-- Authentication state is managed through React hooks
-
-## Development Workflow
-
-1. **Frontend Development**: Work in the `frontend/` directory
-2. **Backend Development**: Work in the `backend/` directory
-3. **Full-stack Development**: Use `npm run dev` from the root directory
-
-## Testing
-
-```bash
-# Test frontend
-npm run test:frontend
-
-# Test backend
-npm run test:backend
-
-# Test both
-npm run test
-```
-
-## Production Build
-
-```bash
-# Build frontend
-npm run frontend:build
-
-# Start production servers
-npm run frontend:start
-npm run backend:start
-```
-
-## Key Changes Made
-
-1. **Separated Frontend/Backend**: All frontend files moved to `frontend/` directory
-2. **Updated API URLs**: Frontend now points to backend at `http://localhost:5000`
-3. **Fixed Authentication Routes**: Updated signup endpoint from `/auth/signup` to `/auth/register`
-4. **Environment Configuration**: Proper `.env` files for both frontend and backend
-5. **Workspace Management**: Root package.json with scripts to manage both apps
-6. **CORS Setup**: Backend configured to accept requests from frontend
-
-## MongoDB Authentication System
-
-The backend uses:
-- **MongoDB** with Mongoose for data persistence
-- **bcrypt** for password hashing
-- **JWT** for authentication tokens
-- **Express.js** for the REST API
-
-The user model includes:
-- Email/password authentication
-- XP and level tracking
-- Quest progress tracking
-- Secure password hashing with pre-save hooks
-
-## Original Features
-
-SocraticWingman is an adaptive tutor for beginner→intermediate developers that teaches via Socratic questioning and a 5-level hint ladder, enforces "no direct answers", and uses SRS to remember learning.
-- **📊 Learning Analytics**: Progress tracking and mastery visualization
-- **🔐 Secure Authentication**: JWT-based auth with OAuth support
-
-## 🚀 Technology Stack
-
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Shadcn-ui
-- **Backend**: Node.js microservices with Express.js
-- **Database**: PostgreSQL + Vector DB (Pinecone/Weaviate)
-- **Authentication**: JWT with OAuth 2.0 (Google, LinkedIn)
-- **Real-time**: WebSocket for live session updates
-- **Styling**: Tailwind CSS with custom design system
+## ✨ Key Features
+- 🤖 **AI-Powered Personalization**: 2-agent qRaptor workflow for intelligent content generation
+- 📊 **Performance Analytics**: Real-time tracking of learning progress and patterns
+- 🎯 **Targeted Practice**: Subtasks generated based on specific user weaknesses
+- ⚡ **Real-time Integration**: Seamless workflow between qRaptor agents and MongoDB
+- 🔒 **Secure Architecture**: JWT authentication and API key validation
+- 📱 **Modern Frontend**: Next.js with TypeScript for responsive user experience
 
 ## 🏗️ Architecture
 
-The platform follows a microservices architecture with 10 core services:
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend       │    │   qRaptor       │
+│   (Next.js)     │◄──►│  (Node.js +      │◄──►│   Agents        │
+│                 │    │   Express +      │    │                 │
+│   - User Interface   │   MongoDB)       │    │ - Agent 1: Data │
+│   - Progress Display │                  │    │ - Agent 2: LLM  │
+│   - Subtask Interaction - API Routes    │    │                 │
+└─────────────────┘    │ - Workflow Logic │    └─────────────────┘
+                       │ - Data Storage   │
+                       └──────────────────┘
+```
 
-1. **API Gateway** (Port 3000) - Routing and rate limiting
-2. **Auth Service** (Port 3001) - Authentication and authorization
-3. **User Service** (Port 3002) - Profile management
-4. **Content Service** (Port 3003) - Question repository
-5. **Session Service** (Port 3004) - Session management
-6. **Tutor Service** (Port 3005) - Socratic questioning logic
-7. **Scoring Worker** (Port 3006) - Code execution and scoring
-8. **SRS Scheduler** (Port 3007) - Spaced repetition system
-9. **Analytics Service** (Port 3008) - Learning analytics
-10. **Notification Service** (Port 3009) - Email and push notifications
+## 🔄 Workflow Process
 
-## 🛠️ Development Setup
+1. **User Completes Module** → Frontend detects completion
+2. **Workflow Trigger** → Backend initiates qRaptor 2-agent workflow  
+3. **Data Collection** → Agent 1 fetches user performance data from MongoDB
+4. **AI Processing** → Agent 2 analyzes data and generates personalized subtasks
+5. **Dual Storage** → Subtasks stored in both qRaptor Data Vault and MongoDB
+6. **User Practice** → Learner receives targeted practice problems immediately
+
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- Node.js 18+ and pnpm
-- PostgreSQL 14+
-# Qraptor MVP
-- Docker (for development services)
+- Node.js 18+ 
+- MongoDB
+- qRaptor instance access
 
 ### Installation
-```bash
-# Install dependencies
-pnpm run db:migrate
-# Start the development server
-pnpm run dev
-```
-
-### Backend Services
 
 ```bash
-# Start all microservices
-pnpm run services:dev
+# Clone repository
+git clone https://github.com/Shahpure15/axonix.git
+cd axonix
 
-# Or start individual services
-pnpm run auth:dev
-pnpm run user:dev
-pnpm run content:dev
-# ... etc
+# Backend setup
+cd backend
+npm install
+cp .env.example .env  # Configure your environment variables
+npm run dev           # Starts on http://localhost:5000
+
+# Frontend setup (new terminal)
+cd ../frontend  
+npm install
+npm run dev          # Starts on http://localhost:3000
 ```
 
-## 📁 Project Structure
+### Environment Configuration
 
-```
-socratic-wingman/
-├── src/                        # Frontend application (Next.js)
-│   ├── components/             # React components
-│   │   ├── ui/                # UI component library
-│   │   ├── api/               # API routes (if needed)
-│   │   ├── learn.tsx          # Learning page
-│   │   └── onboarding.tsx     # Onboarding page
-│   ├── hooks/                 # Custom React hooks
-│   ├── lib/                   # Utilities and configurations
-│   │   ├── api.ts             # API client
-│   │   ├── auth.ts            # Auth store
-│   │   └── utils.ts           # Utility functions
-│   ├── styles/                # Global styles
-│   │   └── globals.css        # Tailwind CSS imports
-│   └── types/                 # TypeScript type definitions
-├── backend/                   # Backend microservices
-│   ├── shared/                # Shared types and utilities
-│   ├── api-gateway/           # API Gateway service
-│   ├── auth-service/          # Authentication service
-│   ├── user-service/          # User management service
-│   ├── session-service/       # Session management service
-│   ├── tutor-service/         # Socratic tutoring logic
-│   ├── scoring-worker/        # Code execution and scoring
-│   ├── analytics-service/     # Learning analytics
-│   └── notification-service/  # Notifications
-├── database/                  # Database schemas and migrations
-│   └── seeds/                 # Database seed files
-├── docs/                      # Documentation
-│   ├── prd.md                 # Product Requirements Document
-│   └── system-design.md       # System Design Document
-```
-## 🔑 Authentication
-
-- Remove the development bypass when connecting to real backend
-## API Documentation
-
-- `POST /api/session/{id}/answer` - Submit answer
-
-## Deployment
-### Staging
-pnpm run build
-pnpm run deploy:staging
-### Production
-pnpm run build
-pnpm run deploy:prod
+**Backend (`.env`)**:
+```bash
+MONGODB_URI=mongodb://localhost:27017/socraticwingman
+JWT_SECRET=your_jwt_secret_key
+QRAPTOR_BASE_URL=https://your-qraptor-instance.com
+QRAPTOR_API_KEY=your_qraptor_api_key
+QRAPTOR_AGENT_API_KEY=your_secure_agent_api_key
+PORT=5000
 ```
 
-## Contributing
+**Frontend (`.env.local`)**:
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_APP_NAME=SocraticWingman
+```
+
+## 📚 Documentation
+
+- **[📖 Project Structure](PROJECT_STRUCTURE.md)** - Detailed file organization and architecture
+- **[📡 API Reference](docs/API_REFERENCE.md)** - Complete API documentation with examples
+- **[🔄 qRaptor Workflow](backend/docs/QRAPTOR_3_AGENT_WORKFLOW.md)** - Technical workflow integration guide
+- **[📊 Data Collection](backend/docs/QRAPTOR_DATA_COLLECTION_API.md)** - Agent data collection endpoints
+- **[🏆 Hackathon Submission](HACKATHON_SUBMISSION.md)** - Project highlights and innovation summary
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Next.js 14** - React framework with App Router
+- **TypeScript** - Type-safe JavaScript  
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Hooks** - Modern state management
+
+### Backend  
+- **Node.js** - JavaScript runtime
+- **Express.js** - Web framework
+- **MongoDB** - NoSQL database
+- **Mongoose** - MongoDB object modeling
+- **JWT** - Authentication tokens
+- **Axios** - HTTP client for qRaptor integration
+
+### AI Integration
+- **qRaptor Agents** - 2-agent workflow system
+- **LLM Processing** - Advanced language model for content generation
+- **Data Vault** - qRaptor's data storage system
+
+## 🎯 Core Features
+
+### Intelligent Subtask Generation
+```javascript
+// When user completes a module, trigger workflow
+const response = await fetch('/api/qraptor/workflow/trigger', {
+  method: 'POST',
+  headers: { 'Authorization': `Bearer ${token}` },
+  body: JSON.stringify({
+    userId: user.id,
+    domainId: 'mathematics',
+    subdomainId: 'algebra',
+    targetConfidence: 80,
+    maxSubtasks: 5
+  })
+});
+```
+
+### Real-time Progress Tracking
+```javascript
+// Monitor workflow progress
+const checkWorkflowStatus = async (workflowId) => {
+  const status = await fetch(`/api/qraptor/workflow/status/${workflowId}`);
+  return status.json();
+};
+```
+
+### Personalized Content Delivery
+```javascript
+// Fetch generated subtasks for user
+const subtasks = await fetch(
+  `/api/qraptor/workflow/subtasks/${userId}/${domain}/${subdomain}`
+);
+```
+
+## 📊 Project Structure
+
+```
+SocraticWingman-qRaptor/
+├── 📄 README.md                    # Main project documentation
+├── 📄 HACKATHON_SUBMISSION.md      # Hackathon highlights
+├── 📁 docs/                        # Global documentation
+│   └── 📄 API_REFERENCE.md         # Complete API reference
+├── 📁 backend/                     # 🔧 Node.js Backend (Port 5000)
+│   ├── 📁 routes/                  # API endpoints
+│   │   ├── 📄 qraptor-workflow.js          # 2-agent workflow
+│   │   └── 📄 qraptor-data-collection.js   # Agent data collection
+│   ├── 📁 services/                # Business logic
+│   │   └── 📄 QraptorWorkflowService.js    # Core qRaptor integration
+│   ├── 📁 models/                  # Database schemas
+│   │   └── 📄 QraptorSubtask.js            # Subtask storage
+│   ├── 📁 data/                    # Static data files
+│   └── 📁 docs/                    # Backend documentation
+└── 📁 frontend/                    # ⚛️ Next.js Frontend (Port 3000)
+    ├── 📁 src/
+    │   ├── 📁 components/          # React components
+    │   ├── 📁 pages/               # Next.js pages
+    │   ├── 📁 lib/                 # Utilities & integrations
+    │   └── 📁 styles/              # Styling files
+    └── 📁 public/                  # Static assets
+```
+
+## 🏆 Hackathon Highlights
+
+- **Innovation**: First-of-its-kind integration between adaptive learning and AI agent workflows
+- **Technical Excellence**: Production-ready code with comprehensive error handling and authentication
+- **User Impact**: Personalized learning experiences that adapt in real-time to user performance
+- **Scalability**: Modular architecture supporting multiple domains and learning types
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- qRaptor team for the intelligent agent framework
+- MongoDB for reliable data storage
+- Next.js team for the amazing React framework
+
+---
+
+**Built with ❤️ for the future of adaptive learning**
