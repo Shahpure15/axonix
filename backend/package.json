@@ -22,7 +22,9 @@
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.0"
+    "mongoose": "^8.18.0",
+    "typescript": "^5.9.2",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -31,9 +33,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.19.11",
     "concurrently": "^8.2.2",
-    "nodemon": "^3.1.10",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "nodemon": "^3.1.10"
   },
   "keywords": [
     "mongodb",
