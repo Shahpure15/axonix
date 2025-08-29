@@ -88,7 +88,7 @@ export default function DomainManager({ userDomains, onDomainsUpdate }: DomainMa
     setIsLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:5000/api/progress/domains', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/progress/domains`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ export default function DomainManager({ userDomains, onDomainsUpdate }: DomainMa
     setIsLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:5000/api/progress/domains', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/progress/domains`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

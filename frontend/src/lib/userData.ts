@@ -1,4 +1,6 @@
 // Utility functions for managing user data via API routes
+import { API_BASE_URL, AUTH_URL } from './env';
+// Utility functions for managing user data via API routes
 // This makes HTTP requests to our API endpoints that handle JSON file operations
 
 export interface UserData {
@@ -46,7 +48,7 @@ export const userStorage = {
   saveOnboardingData: async (userId: string, email: string, name: string, domains: string[], experience_level: string, preferred_study_time: string, timezone: string): Promise<any> => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:5000/api/onboarding', {
+    const response = await fetch(`${API_BASE_URL}/api/onboarding`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +125,7 @@ export const userStorage = {
   getOnboardingData: async (userId: string): Promise<any> => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:5000/api/onboarding`, {
+  const response = await fetch(`${API_BASE_URL}/api/onboarding`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -209,7 +211,7 @@ export const userStorage = {
   getUser: async (userId: string): Promise<UserData | null> => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:5000/auth/me`, {
+  const response = await fetch(`${AUTH_URL}/me`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

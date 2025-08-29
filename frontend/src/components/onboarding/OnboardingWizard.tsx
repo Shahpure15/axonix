@@ -157,7 +157,7 @@ export default function OnboardingWizard() {
       });
 
       // Send onboarding data to backend
-      const response = await fetch('http://localhost:5000/api/onboarding', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/onboarding`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ export default function OnboardingWizard() {
 
       // Initialize learning progress
       try {
-        const progressResponse = await fetch('http://localhost:5000/api/progress/initialize', {
+  const progressResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/progress/initialize`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

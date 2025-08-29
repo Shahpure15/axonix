@@ -48,7 +48,7 @@ export default function DiagnosticTest({ domain, onComplete, onClose }: Diagnost
   const loadQuestions = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:5000/api/test/diagnostic/${domain}?limit=10`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/test/diagnostic/${domain}?limit=10`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -71,7 +71,7 @@ export default function DiagnosticTest({ domain, onComplete, onClose }: Diagnost
   const startTest = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:5000/api/test/start', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/test/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ export default function DiagnosticTest({ domain, onComplete, onClose }: Diagnost
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('http://localhost:5000/api/test/submit', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/test/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

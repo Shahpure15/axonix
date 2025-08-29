@@ -8,7 +8,7 @@ import { User, AuthToken } from '@/types';
  * Connects directly to backend API at http://localhost:5000
  */
 
-const API_BASE_URL = 'http://localhost:5000';
+import { API_BASE_URL } from './env';
 
 interface AuthState {
   user: User | null;
