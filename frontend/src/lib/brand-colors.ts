@@ -87,4 +87,8 @@ export const getSocraticWingmanBorder = (variant: 'light' | 'medium' | 'dark' | 
   return socraticWingmanColors.border[variant];
 };
 
+// Aliases for backward compatibility
+export const axonixColors = socraticWingmanColors;
+export const getAxonixGradient = getSocraticWingmanGradient;
+
 export default socraticWingmanColors;

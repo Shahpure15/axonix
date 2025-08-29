@@ -1,10 +1,88 @@
-// Re-export shared types for frontend use
-export * from '../../backend/shared/src/types';
+// Core types - defined locally to avoid path resolution issues
+export interface User {
+  user_id: string;
+  email: string;
+  name?: string;
+  avatar_url?: string;
+  preferences?: {
+    domains: string[];
+    experience_level: 'beginner' | 'intermediate' | 'advanced';
+    preferred_study_time: string;
+    timezone: string;
+  };
+  created_at: Date;
+  last_login?: Date;
+}
+
+export interface Session {
+  session_id: string;
+  user_id: string;
+  session_type: 'diagnostic' | 'learning' | 'practice' | 'review';
+  domain: string;
+  started_at: Date;
+  ended_at?: Date;
+  summary?: {
+    questions_answered: number;
+    correct_answers: number;
+    hints_used: number;
+    time_spent: number;
+    mastery_gains: Record<string, number>;
+  };
+  completion_score?: number;
+}
+
+export interface Question {
+  question_id: string;
+  domain: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  tags: string[];
+  title: string;
+  body: string;
+  testcases: Array<{
+    input: string;
+    expected_output: string;
+    is_hidden: boolean;
+  }>;
+  hint_ladder: {
+    level1: string;
+    level2: string;
+    level3: string;
+    level4: string;
+    level5: string;
+  };
+  metadata: {
+    estimated_time: number;
+    mastery_concepts: string[];
+    prerequisites: string[];
+  };
+}
+
+export interface HintUsage {
+  questionId: string;
+  hintLevel: number;
+  timestamp: Date;
+}
+
+export interface MasteryVector {
+  concept: string;
+  mastery_level: number;
+  confidence: number;
+  last_updated: Date;
+}
+
+export interface SRSItem {
+  item_id: string;
+  concept: string;
+  due_date: Date;
+  interval: number;
+  ease_factor: number;
+  repetitions: number;
+}
 
 // Frontend-specific types
 export interface UserSession {
   user: User;
-  tokens: AuthToken;
+  tokens: any; // Will define properly later
   isAuthenticated: boolean;
 }
 

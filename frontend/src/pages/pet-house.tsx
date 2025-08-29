@@ -365,7 +365,7 @@ export default function PetHousePage() {
                               </div>
                               <div className="flex-1">
                                 <p className="text-sm font-medium text-axonix-800">{accessory.name}</p>
-                                <Badge size="sm" className={`bg-gradient-to-r ${getRarityColor(accessory.rarity)} text-white border-0`}>
+                                <Badge className={`bg-gradient-to-r ${getRarityColor(accessory.rarity)} text-white border-0 text-xs`}>
                                   {accessory.rarity}
                                 </Badge>
                               </div>
